@@ -9,6 +9,7 @@
     "paths": {
       "@/*": ["./*"]
     },
+    "noUnusedLocals": true,
     "strictNullChecks": true
   },
   "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", "next.config.js", ".next/types/**/*.ts"],
