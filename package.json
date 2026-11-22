@@ -5,7 +5,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format": "pnpm --parallel --filter web --filter api run format",
     "check-types": "turbo run check-types",
     "db:generate": "turbo run db:generate",
     "db:push": "turbo run db:push",
