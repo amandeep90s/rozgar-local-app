@@ -21,5 +21,19 @@ export type {
 export {
   registrationRequestSchema,
   verifyEmailRequestSchema,
+  loginRequestSchema,
+  forgotPasswordRequestSchema,
+  resetPasswordRequestSchema,
+  refreshRequestSchema,
+  sessionResponseSchema,
+  currentUserResponseSchema,
 } from "./auth-api.js";
-export type { RegistrationRequest, VerifyEmailRequest } from "./auth-api.js";
+export type {
+  RegistrationRequest,
+  VerifyEmailRequest,
+  LoginRequest,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
+  RefreshRequest,
+  SessionResponse,
+} from "./auth-api.js";

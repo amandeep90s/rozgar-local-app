@@ -2,8 +2,9 @@
 
 RozgarLocal is a work-in-progress local employment platform. The repository
 contains a Next.js web app, a NestJS API, shared contracts and a Prisma
-database package. Authentication and marketplace features are not implemented;
-the web app includes UI-only authentication previews.
+database package. Email/password registration, verification, sign-in, session
+management and password recovery are implemented but require deployment
+configuration and end-to-end testing. Marketplace features are not implemented.
 
 ## Prerequisites
 
@@ -14,7 +15,7 @@ the web app includes UI-only authentication previews.
 ## Getting started
 
 ```sh
-pnpm install --frozen-lockfile
+pnpm install
 pnpm dev
 ```
 
@@ -35,8 +36,49 @@ environment or `apps/web/.env.local` when the API is on another HTTP(S)
 origin. The default is `http://127.0.0.1:3001`. The web app calls this
 address server-side; it must be reachable from the web server.
 
-The shared contracts package is built before application development,
-builds, and checks. Restart `pnpm dev` after changing a shared contract.
+The shared contracts and database packages are built before application
+development, builds, and checks. The database package generates Prisma Client
+as part of its build. Restart `pnpm dev` after changing a shared contract.
+
+Authentication requires a migrated database and `DATABASE_URL`, `WEB_BASE_URL`,
+`AUTH_MAIL_FROM`, `RESEND_API_KEY`, `AUTH_JWT_SECRET` and `AUTH_PROXY_SECRET` in
+the API environment. Set the same `AUTH_PROXY_SECRET` in the web server
+environment (for local development, `apps/web/.env.local`). Each secret must
+be independently generated using a cryptographically secure random generator
+and contain at least 32 UTF-8 bytes. Never commit secrets. Use HTTPS for the
+public web origin and the API connection outside localhost, and a verified
+Resend sender.
+
+The web server stores access and rotating refresh tokens in HttpOnly,
+SameSite=Lax cookies (Secure in production). It uses Next.js server actions'
+origin/host CSRF checks; configure the reverse proxy to overwrite the Host and
+forwarded host headers correctly. Session refresh is coordinated across tabs
+using Web Locks. Browsers without Web Locks cannot automatically resume an
+expired access session and must sign in again.
+
+Production requires exactly one trusted reverse proxy in front of Next.js. It
+must overwrite `X-Forwarded-For` with exactly one validated client IP and
+remove client-supplied forwarding headers; block direct access to Next.js.
+The web server signs the IP with `AUTH_PROXY_SECRET` for the API, which uses
+PostgreSQL-backed per-IP and per-account limits. Keep the API private or ensure
+its direct clients' socket IPs are reliable, synchronize server clocks, and
+add edge-level abuse protection. Do not share the proxy secret with clients.
+Expired rate-limit records are removed opportunistically, but verification,
+reset and session records need a separately scheduled retention policy.
+Keep consumed refresh tokens until their session expires so replay detection
+continues to work.
+Protect token-bearing URLs from access logs and analytics. Email delivery is
+synchronous and failed deliveries must be retried by the user. Review and test
+the complete deployment and authentication flows before exposing them.
+
+The lockfile needs to be refreshed after the dependency changes on a machine
+where installation is permitted; frozen installation will fail until then.
+When running API commands directly, build `@repo/contracts` and `@repo/db`
+first. Turbo's current strict environment configuration does not pass
+`WEB_BASE_URL`, `AUTH_MAIL_FROM`, `RESEND_API_KEY`, `AUTH_JWT_SECRET`, or
+`AUTH_PROXY_SECRET` from the process
+environment; use the root `.env` for development or launch the built API
+directly with these environment variables until Turbo is configured for them.
 
 ## Checks
 
