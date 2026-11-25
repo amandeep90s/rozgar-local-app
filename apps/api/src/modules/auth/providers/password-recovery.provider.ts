@@ -1,91 +1,43 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import type { ForgotPasswordRequest, ResetPasswordRequest } from '@repo/contracts';
-import { PrismaService } from '@/infrastructure/database/prisma.service.js';
+import { PasswordRecoveryRepository } from '@/modules/auth/repositories/password-recovery.repository.js';
 import { PasswordProvider } from './password.provider.js';
 import { TokenProvider } from './token.provider.js';
 import { VerificationMailProvider } from './verification-mail.provider.js';
 
+const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
+
 @Injectable()
 export class PasswordRecoveryProvider {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly passwordRecovery: PasswordRecoveryRepository,
     private readonly passwords: PasswordProvider,
     private readonly tokens: TokenProvider,
     private readonly mail: VerificationMailProvider,
   ) {}
 
   async requestReset(input: ForgotPasswordRequest): Promise<void> {
-    this.mail.getSettings();
-    const db = this.prisma.client;
-    const user = await db.user.findUnique({
-      where: { email: input.email },
-      select: {
-        id: true,
-        status: true,
-        deletedAt: true,
-        emailVerifiedAt: true,
-        passwordCredential: { select: { id: true } },
-      },
-    });
-    let token: string | undefined;
-    if (
-      user &&
-      user.status === 'ACTIVE' &&
-      !user.deletedAt &&
-      user.emailVerifiedAt &&
-      user.passwordCredential
-    ) {
-      token = this.tokens.createOpaqueToken();
-      await db.passwordResetToken.create({
-        data: {
-          userId: user.id,
-          tokenHash: this.tokens.hash(token),
-          expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-        },
+    this.mail.assertReady();
+    const account = await this.passwordRecovery.findEligibleAccount(input.email);
+    const resetToken = account ? this.tokens.createOpaqueToken() : undefined;
+
+    if (account && resetToken) {
+      await this.passwordRecovery.createResetToken({
+        userId: account.id,
+        tokenHash: this.tokens.hash(resetToken),
+        expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
       });
     }
-    await this.mail.sendPasswordReset(input.email, token);
+
+    await this.mail.sendPasswordReset(input.email, resetToken);
   }
 
   async resetPassword(input: ResetPasswordRequest): Promise<void> {
-    const db = this.prisma.client;
-    const tokenHash = this.tokens.hash(input.token);
-    const passwordHash = await this.passwords.hash(input.password);
-    await db.$transaction(async (tx) => {
-      const candidate = await tx.passwordResetToken.findUnique({
-        where: { tokenHash },
-        select: { userId: true },
-      });
-      if (!candidate) throw new BadRequestException('Invalid or expired reset link');
-      await tx.$queryRaw`SELECT "id" FROM "users" WHERE "id" = ${candidate.userId}::uuid FOR UPDATE`;
-      const now = new Date();
-      const consumed = await tx.passwordResetToken.updateMany({
-        where: {
-          tokenHash,
-          consumedAt: null,
-          expiresAt: { gt: now },
-          user: {
-            status: 'ACTIVE',
-            deletedAt: null,
-            emailVerifiedAt: { not: null },
-            passwordCredential: { isNot: null },
-          },
-        },
-        data: { consumedAt: now },
-      });
-      if (consumed.count !== 1) throw new BadRequestException('Invalid or expired reset link');
-      await tx.passwordCredential.update({
-        where: { userId: candidate.userId },
-        data: { passwordHash, passwordChangedAt: now },
-      });
-      await tx.passwordResetToken.updateMany({
-        where: { userId: candidate.userId, consumedAt: null },
-        data: { consumedAt: now },
-      });
-      await tx.authSession.updateMany({
-        where: { userId: candidate.userId, revokedAt: null },
-        data: { revokedAt: now },
-      });
+    const didReset = await this.passwordRecovery.resetPassword({
+      tokenHash: this.tokens.hash(input.token),
+      passwordHash: await this.passwords.hash(input.password),
+      now: new Date(),
     });
+    if (!didReset) throw new BadRequestException('Invalid or expired reset link');
   }
 }

@@ -1,134 +1,51 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import type { RegistrationRequest } from '@repo/contracts';
-import { Prisma } from '@repo/db/generated';
-import { PrismaService } from '@/infrastructure/database/prisma.service.js';
+import { AuthAccountRepository } from '@/modules/auth/repositories/auth-account.repository.js';
 import { PasswordProvider } from './password.provider.js';
 import { TokenProvider } from './token.provider.js';
 import { VerificationMailProvider } from './verification-mail.provider.js';
 
+const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+
 @Injectable()
 export class RegistrationProvider {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly accounts: AuthAccountRepository,
     private readonly passwords: PasswordProvider,
     private readonly tokens: TokenProvider,
     private readonly mail: VerificationMailProvider,
   ) {}
 
   async register(input: RegistrationRequest): Promise<void> {
-    this.mail.getSettings();
+    this.mail.assertReady();
     const passwordHash = await this.passwords.hash(input.password);
-    const db = this.prisma.client;
-    let user = await db.user.findUnique({
-      where: { email: input.email },
-      select: { id: true, emailVerifiedAt: true, status: true },
+    const account = await this.accounts.findOrCreateRegistrationAccount({
+      email: input.email,
+      name: input.name,
+      passwordHash,
     });
 
-    if (!user) {
-      try {
-        user = await db.$transaction(async (tx) => {
-          const createdUser = await tx.user.create({
-            data: {
-              email: input.email,
-              name: input.name,
-              passwordCredential: { create: { passwordHash } },
-            },
-            select: { id: true, emailVerifiedAt: true, status: true },
-          });
-          await tx.userAuthProvider.create({
-            data: {
-              userId: createdUser.id,
-              provider: 'EMAIL_PASSWORD',
-              providerUserId: createdUser.id,
-            },
-          });
-          return createdUser;
-        });
-      } catch (error) {
-        if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {
-          throw error;
-        }
-        user = await db.user.findUnique({
-          where: { email: input.email },
-          select: { id: true, emailVerifiedAt: true, status: true },
-        });
-        if (!user) throw error;
-      }
-    }
-
-    let token: string | undefined;
-    if (!user.emailVerifiedAt && (user.status === 'ACTIVE' || user.status === 'PENDING')) {
-      token = randomBytes(32).toString('base64url');
-      await db.emailVerificationToken.create({
-        data: {
-          userId: user.id,
-          tokenHash: this.tokens.hash(token),
-          pendingPasswordHash: passwordHash,
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        },
+    const verificationToken = this.createVerificationTokenIfEligible(account);
+    if (verificationToken) {
+      await this.accounts.createVerificationToken({
+        userId: account.id,
+        tokenHash: this.tokens.hash(verificationToken),
+        pendingPasswordHash: passwordHash,
+        expiresAt: new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS),
       });
     }
-    await this.mail.send(input.email, token);
+
+    await this.mail.send(input.email, verificationToken);
   }
 
-  async verifyEmail(token: string): Promise<void> {
-    const db = this.prisma.client;
-    const tokenHash = this.tokens.hash(token);
-    await db.$transaction(async (tx) => {
-      const now = new Date();
-      const verification = await tx.emailVerificationToken.findFirst({
-        where: {
-          tokenHash,
-          consumedAt: null,
-          expiresAt: { gt: now },
-          pendingPasswordHash: { not: null },
-        },
-        select: { userId: true, pendingPasswordHash: true },
-      });
-      if (!verification?.pendingPasswordHash) {
-        throw new BadRequestException('Invalid or expired verification link');
-      }
-      const verified = await tx.user.updateMany({
-        where: {
-          id: verification.userId,
-          emailVerifiedAt: null,
-          status: { in: ['ACTIVE', 'PENDING'] },
-        },
-        data: { emailVerifiedAt: now, status: 'ACTIVE' },
-      });
-      if (verified.count !== 1) {
-        throw new BadRequestException('Invalid or expired verification link');
-      }
-      const consumed = await tx.emailVerificationToken.updateMany({
-        where: {
-          tokenHash,
-          consumedAt: null,
-          expiresAt: { gt: now },
-        },
-        data: { consumedAt: now },
-      });
-      if (consumed.count !== 1) {
-        throw new BadRequestException('Invalid or expired verification link');
-      }
-      await tx.passwordCredential.upsert({
-        where: { userId: verification.userId },
-        create: { userId: verification.userId, passwordHash: verification.pendingPasswordHash },
-        update: { passwordHash: verification.pendingPasswordHash, passwordChangedAt: now },
-      });
-      await tx.userAuthProvider.upsert({
-        where: { userId_provider: { userId: verification.userId, provider: 'EMAIL_PASSWORD' } },
-        create: {
-          userId: verification.userId,
-          provider: 'EMAIL_PASSWORD',
-          providerUserId: verification.userId,
-        },
-        update: {},
-      });
-      await tx.emailVerificationToken.updateMany({
-        where: { userId: verification.userId },
-        data: { consumedAt: now, pendingPasswordHash: null },
-      });
-    });
+  private createVerificationTokenIfEligible(account: {
+    emailVerifiedAt: Date | null;
+    status: string;
+  }): string | undefined {
+    if (account.emailVerifiedAt || !['ACTIVE', 'PENDING'].includes(account.status)) {
+      return undefined;
+    }
+    return randomBytes(32).toString('base64url');
   }
 }

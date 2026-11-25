@@ -1,64 +1,62 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { PrismaService } from '@/infrastructure/database/prisma.service.js';
+import { PasswordRecoveryRepository } from '@/modules/auth/repositories/password-recovery.repository.js';
 import { PasswordProvider } from './password.provider.js';
 import { PasswordRecoveryProvider } from './password-recovery.provider.js';
 import { TokenProvider } from './token.provider.js';
 import { VerificationMailProvider } from './verification-mail.provider.js';
 
 describe('PasswordRecoveryProvider', () => {
-  const tx = {
-    $queryRaw: vi.fn(),
-    passwordResetToken: { findUnique: vi.fn(), updateMany: vi.fn() },
-    passwordCredential: { update: vi.fn() },
-    authSession: { updateMany: vi.fn() },
-  };
-  const db = {
-    $transaction: vi.fn(async (callback: (transaction: typeof tx) => Promise<void>) =>
-      callback(tx),
-    ),
+  const recovery = {
+    findEligibleAccount: vi.fn(),
+    createResetToken: vi.fn(),
+    resetPassword: vi.fn(),
   };
   const passwords = { hash: vi.fn() };
-  const tokens = { hash: vi.fn() };
-  let service: PasswordRecoveryProvider;
+  const tokens = { createOpaqueToken: vi.fn(), hash: vi.fn() };
+  const mail = { assertReady: vi.fn(), sendPasswordReset: vi.fn() };
+  let provider: PasswordRecoveryProvider;
 
   beforeEach(async () => {
     vi.resetAllMocks();
     const module = await Test.createTestingModule({
       providers: [
         PasswordRecoveryProvider,
-        { provide: PrismaService, useValue: { client: db } },
+        { provide: PasswordRecoveryRepository, useValue: recovery },
         { provide: PasswordProvider, useValue: passwords },
         { provide: TokenProvider, useValue: tokens },
-        { provide: VerificationMailProvider, useValue: {} },
+        { provide: VerificationMailProvider, useValue: mail },
       ],
     }).compile();
-    service = module.get(PasswordRecoveryProvider);
-    passwords.hash.mockResolvedValue('new-hash');
+    provider = module.get(PasswordRecoveryProvider);
+    passwords.hash.mockResolvedValue('new-password-hash');
     tokens.hash.mockReturnValue('token-hash');
-    tx.passwordResetToken.findUnique.mockResolvedValue({ userId: 'user-id' });
+    tokens.createOpaqueToken.mockReturnValue('reset-token');
   });
 
-  it('consumes reset links, updates the password and revokes sessions', async () => {
-    tx.passwordResetToken.updateMany.mockResolvedValue({ count: 1 });
-    await service.resetPassword({ token: 'token', password: 'new-password' });
-    expect(tx.passwordCredential.update).toHaveBeenCalledWith({
-      where: { userId: 'user-id' },
-      data: { passwordHash: 'new-hash', passwordChangedAt: expect.any(Date) },
-    });
-    expect(tx.passwordResetToken.updateMany).toHaveBeenCalledTimes(2);
-    expect(tx.authSession.updateMany).toHaveBeenCalledWith({
-      where: { userId: 'user-id', revokedAt: null },
-      data: { revokedAt: expect.any(Date) },
+  it('updates the password only after the repository consumes a valid token', async () => {
+    recovery.resetPassword.mockResolvedValue(true);
+    await provider.resetPassword({ token: 'reset-token', password: 'new-password' });
+
+    expect(recovery.resetPassword).toHaveBeenCalledWith({
+      tokenHash: 'token-hash',
+      passwordHash: 'new-password-hash',
+      now: expect.any(Date),
     });
   });
 
-  it('rejects a consumed or expired reset token without changing credentials', async () => {
-    tx.passwordResetToken.updateMany.mockResolvedValue({ count: 0 });
+  it('rejects an expired or consumed reset token', async () => {
+    recovery.resetPassword.mockResolvedValue(false);
     await expect(
-      service.resetPassword({ token: 'token', password: 'new-password' }),
+      provider.resetPassword({ token: 'expired-token', password: 'new-password' }),
     ).rejects.toBeInstanceOf(BadRequestException);
-    expect(tx.passwordCredential.update).not.toHaveBeenCalled();
-    expect(tx.authSession.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('sends the same generic response for an account not eligible for password recovery', async () => {
+    recovery.findEligibleAccount.mockResolvedValue(null);
+    await provider.requestReset({ email: 'user@example.com' });
+
+    expect(recovery.createResetToken).not.toHaveBeenCalled();
+    expect(mail.sendPasswordReset).toHaveBeenCalledWith('user@example.com', undefined);
   });
 });

@@ -1,170 +1,42 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import type { LoginRequest, SessionResponse } from '@repo/contracts';
-import { PrismaService } from '@/infrastructure/database/prisma.service.js';
-import { PasswordProvider } from './password.provider.js';
-import { ACCESS_TTL_SECONDS, SESSION_TTL_SECONDS, TokenProvider } from './token.provider.js';
+import type { SessionResponse } from '@repo/contracts';
+import { SessionRepository } from '@/modules/auth/repositories/session.repository.js';
+import { TokenProvider } from './token.provider.js';
+import { createSessionResponse } from './session-response.js';
 
 @Injectable()
 export class SessionProvider {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly passwords: PasswordProvider,
+    private readonly sessions: SessionRepository,
     private readonly tokens: TokenProvider,
   ) {}
 
-  async login(input: LoginRequest): Promise<SessionResponse> {
-    const db = this.prisma.client;
-    const user = await db.user.findUnique({
-      where: { email: input.email },
-      select: {
-        id: true,
-        status: true,
-        deletedAt: true,
-        emailVerifiedAt: true,
-        passwordCredential: { select: { passwordHash: true } },
-      },
-    });
-    const passwordHash = user?.passwordCredential?.passwordHash;
-    const matches = passwordHash
-      ? await this.passwords.verify(passwordHash, input.password)
-      : (await this.passwords.hash(input.password), false);
-    if (
-      !matches ||
-      !user ||
-      !passwordHash ||
-      user.status !== 'ACTIVE' ||
-      user.deletedAt ||
-      !user.emailVerifiedAt
-    ) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
-
-    const refreshToken = this.tokens.createOpaqueToken();
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + SESSION_TTL_SECONDS * 1000);
-    const accessToken = await db.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "id" FROM "users" WHERE "id" = ${user.id}::uuid FOR UPDATE`;
-      const current = await tx.user.findFirst({
-        where: {
-          id: user.id,
-          status: 'ACTIVE',
-          deletedAt: null,
-          emailVerifiedAt: { not: null },
-          passwordCredential: { is: { passwordHash } },
-        },
-        select: { id: true },
-      });
-      if (!current) throw new UnauthorizedException('Invalid email or password');
-      await tx.user.update({ where: { id: user.id }, data: { lastLoginAt: now } });
-      const session = await tx.authSession.create({
-        data: {
-          userId: user.id,
-          expiresAt,
-          refreshTokens: {
-            create: { tokenHash: this.tokens.hash(refreshToken), expiresAt },
-          },
-        },
-        select: { id: true },
-      });
-      return this.tokens.signAccess(user.id, session.id);
-    });
-    return this.response(accessToken, refreshToken, SESSION_TTL_SECONDS);
-  }
-
   async refresh(refreshToken: string): Promise<SessionResponse> {
-    const db = this.prisma.client;
     const tokenHash = this.tokens.hash(refreshToken);
-    const existing = await db.authRefreshToken.findUnique({
-      where: { tokenHash },
-      select: { sessionId: true, authSession: { select: { userId: true } } },
-    });
-    if (!existing) throw new UnauthorizedException('Invalid session');
-    const nextToken = this.tokens.createOpaqueToken();
-    const accessToken = this.tokens.signAccess(existing.authSession.userId, existing.sessionId);
-    const result = await db.$transaction(async (tx) => {
-      const now = new Date();
-      await tx.$queryRaw`SELECT "id" FROM "users" WHERE "id" = ${existing.authSession.userId}::uuid FOR UPDATE`;
-      await tx.$queryRaw`SELECT "id" FROM "auth_sessions" WHERE "id" = ${existing.sessionId}::uuid FOR UPDATE`;
-      const current = await tx.authRefreshToken.findUnique({
-        where: { tokenHash },
-        include: { authSession: { include: { user: true } } },
-      });
-      if (!current) return null;
-      const session = current.authSession;
-      if (current.consumedAt) {
-        await tx.authSession.updateMany({
-          where: { id: session.id, revokedAt: null },
-          data: { revokedAt: now },
-        });
-        return null;
-      }
-      if (
-        current.revokedAt ||
-        current.expiresAt <= now ||
-        session.revokedAt ||
-        session.expiresAt <= now ||
-        session.user.status !== 'ACTIVE' ||
-        session.user.deletedAt ||
-        !session.user.emailVerifiedAt
-      )
-        return null;
+    const owner = await this.sessions.findRefreshTokenOwner(tokenHash);
+    if (!owner) throw new UnauthorizedException('Invalid session');
 
-      const consumed = await tx.authRefreshToken.updateMany({
-        where: { id: current.id, consumedAt: null, revokedAt: null, expiresAt: { gt: now } },
-        data: { consumedAt: now },
-      });
-      if (consumed.count !== 1) {
-        await tx.authSession.updateMany({
-          where: { id: session.id, revokedAt: null },
-          data: { revokedAt: now },
-        });
-        return null;
-      }
-      await tx.authSession.update({ where: { id: session.id }, data: { lastUsedAt: now } });
-      await tx.authRefreshToken.create({
-        data: {
-          sessionId: session.id,
-          tokenHash: this.tokens.hash(nextToken),
-          expiresAt: session.expiresAt,
-        },
-      });
-      return Math.max(1, Math.floor((session.expiresAt.getTime() - now.getTime()) / 1000));
+    const nextRefreshToken = this.tokens.createOpaqueToken();
+    const accessToken = this.tokens.signAccess(owner.userId, owner.sessionId);
+    const refreshExpiresIn = await this.sessions.rotateRefreshToken({
+      tokenHash,
+      nextTokenHash: this.tokens.hash(nextRefreshToken),
+      owner,
+      now: new Date(),
     });
-    if (!result) throw new UnauthorizedException('Invalid session');
-    return this.response(accessToken, nextToken, result);
+    if (!refreshExpiresIn) throw new UnauthorizedException('Invalid session');
+
+    return createSessionResponse(accessToken, nextRefreshToken, refreshExpiresIn);
   }
 
   async currentUser(accessToken: string) {
     const { userId, sessionId } = this.tokens.verifyAccess(accessToken);
-    const session = await this.prisma.client.authSession.findFirst({
-      where: {
-        id: sessionId,
-        userId,
-        revokedAt: null,
-        expiresAt: { gt: new Date() },
-        user: { status: 'ACTIVE', deletedAt: null, emailVerifiedAt: { not: null } },
-      },
-      select: { user: { select: { id: true, name: true, email: true } } },
-    });
-    if (!session) throw new UnauthorizedException('Invalid session');
-    return session.user;
+    const user = await this.sessions.findCurrentUser(userId, sessionId, new Date());
+    if (!user) throw new UnauthorizedException('Invalid session');
+    return user;
   }
 
-  async logout(refreshToken: string): Promise<void> {
-    await this.prisma.client.authSession.updateMany({
-      where: {
-        refreshTokens: { some: { tokenHash: this.tokens.hash(refreshToken) } },
-        revokedAt: null,
-      },
-      data: { revokedAt: new Date() },
-    });
-  }
-
-  private response(
-    accessToken: string,
-    refreshToken: string,
-    refreshExpiresIn: number,
-  ): SessionResponse {
-    return { accessToken, refreshToken, accessExpiresIn: ACCESS_TTL_SECONDS, refreshExpiresIn };
+  logout(refreshToken: string): Promise<void> {
+    return this.sessions.revokeByRefreshToken(this.tokens.hash(refreshToken), new Date());
   }
 }

@@ -1,137 +1,76 @@
-import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { createHash } from 'node:crypto';
-import { PrismaService } from '@/infrastructure/database/prisma.service.js';
+import { AuthAccountRepository } from '@/modules/auth/repositories/auth-account.repository.js';
 import { PasswordProvider } from './password.provider.js';
 import { RegistrationProvider } from './registration.provider.js';
 import { TokenProvider } from './token.provider.js';
 import { VerificationMailProvider } from './verification-mail.provider.js';
 
 describe('RegistrationProvider', () => {
-  const user = { id: 'user-id', emailVerifiedAt: null, status: 'ACTIVE' };
-  const tx = {
-    user: { create: vi.fn(), updateMany: vi.fn() },
-    emailVerificationToken: { findFirst: vi.fn(), updateMany: vi.fn() },
-    passwordCredential: { upsert: vi.fn() },
-    userAuthProvider: { create: vi.fn(), upsert: vi.fn() },
-  };
-  const db = {
-    user: { findUnique: vi.fn() },
-    emailVerificationToken: { create: vi.fn() },
-    $transaction: vi.fn(async (callback: (transaction: typeof tx) => Promise<unknown>) =>
-      callback(tx),
-    ),
+  const account = { id: 'user-id', emailVerifiedAt: null, status: 'ACTIVE' };
+  const accounts = {
+    findOrCreateRegistrationAccount: vi.fn(),
+    createVerificationToken: vi.fn(),
+    verifyEmailToken: vi.fn(),
   };
   const passwords = { hash: vi.fn() };
   const tokens = {
     hash: vi.fn((token: string) => createHash('sha256').update(token).digest('hex')),
   };
-  const mail = { getSettings: vi.fn(), send: vi.fn() };
-  let service: RegistrationProvider;
+  const mail = { assertReady: vi.fn(), send: vi.fn() };
+  let provider: RegistrationProvider;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     const module = await Test.createTestingModule({
       providers: [
         RegistrationProvider,
-        { provide: PrismaService, useValue: { client: db } },
+        { provide: AuthAccountRepository, useValue: accounts },
         { provide: PasswordProvider, useValue: passwords },
         { provide: TokenProvider, useValue: tokens },
         { provide: VerificationMailProvider, useValue: mail },
       ],
     }).compile();
-    service = module.get(RegistrationProvider);
+    provider = module.get(RegistrationProvider);
     passwords.hash.mockResolvedValue('password-hash');
-    db.user.findUnique.mockResolvedValue(null);
-    tx.user.create.mockResolvedValue(user);
+    accounts.findOrCreateRegistrationAccount.mockResolvedValue(account);
     mail.send.mockResolvedValue(undefined);
   });
 
-  it('creates a credential and identity and stores only a hashed verification token', async () => {
-    await service.register({ name: 'Example', email: 'user@example.com', password: 'password123' });
+  it('stores only a hashed verification token for a newly registered account', async () => {
+    await provider.register({
+      name: 'Example',
+      email: 'user@example.com',
+      password: 'password123',
+    });
 
-    expect(tx.user.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          email: 'user@example.com',
-          passwordCredential: { create: { passwordHash: 'password-hash' } },
-        }),
-      }),
-    );
-    expect(tx.userAuthProvider.create).toHaveBeenCalledWith({
-      data: {
-        userId: user.id,
-        provider: 'EMAIL_PASSWORD',
-        providerUserId: user.id,
-      },
+    expect(accounts.findOrCreateRegistrationAccount).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      name: 'Example',
+      passwordHash: 'password-hash',
     });
     const token = mail.send.mock.calls[0]?.[1];
     expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/);
-    expect(db.emailVerificationToken.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        userId: user.id,
-        tokenHash: createHash('sha256').update(token).digest('hex'),
-        pendingPasswordHash: 'password-hash',
-      }),
+    expect(accounts.createVerificationToken).toHaveBeenCalledWith({
+      userId: account.id,
+      tokenHash: createHash('sha256').update(token).digest('hex'),
+      pendingPasswordHash: 'password-hash',
+      expiresAt: expect.any(Date),
     });
   });
 
-  it('does not replace existing credentials before email ownership is verified', async () => {
-    db.user.findUnique.mockResolvedValue(user);
-    await service.register({ name: 'Example', email: 'user@example.com', password: 'password123' });
-    expect(tx.user.create).not.toHaveBeenCalled();
-    expect(db.emailVerificationToken.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ pendingPasswordHash: 'password-hash' }),
+  it('does not issue another verification token for a verified account', async () => {
+    accounts.findOrCreateRegistrationAccount.mockResolvedValue({
+      ...account,
+      emailVerifiedAt: new Date(),
     });
-  });
+    await provider.register({
+      name: 'Example',
+      email: 'user@example.com',
+      password: 'password123',
+    });
 
-  it('sends a generic notification for an already verified account', async () => {
-    db.user.findUnique.mockResolvedValue({ ...user, emailVerifiedAt: new Date() });
-    await service.register({ name: 'Example', email: 'user@example.com', password: 'password123' });
-    expect(db.emailVerificationToken.create).not.toHaveBeenCalled();
+    expect(accounts.createVerificationToken).not.toHaveBeenCalled();
     expect(mail.send).toHaveBeenCalledWith('user@example.com', undefined);
-  });
-
-  it('uses the password attached to the verified link and invalidates other links', async () => {
-    tx.emailVerificationToken.findFirst.mockResolvedValue({
-      userId: user.id,
-      pendingPasswordHash: 'password-from-link',
-    });
-    tx.user.updateMany.mockResolvedValue({ count: 1 });
-    tx.emailVerificationToken.updateMany.mockResolvedValue({ count: 1 });
-
-    await service.verifyEmail('token');
-
-    expect(tx.passwordCredential.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        update: expect.objectContaining({ passwordHash: 'password-from-link' }),
-      }),
-    );
-    expect(tx.emailVerificationToken.updateMany).toHaveBeenLastCalledWith({
-      where: { userId: user.id },
-      data: { consumedAt: expect.any(Date), pendingPasswordHash: null },
-    });
-  });
-
-  it('rejects expired, consumed, and already verified links', async () => {
-    tx.emailVerificationToken.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({
-      userId: user.id,
-      pendingPasswordHash: 'password-hash',
-    });
-    tx.user.updateMany.mockResolvedValue({ count: 0 });
-    await expect(service.verifyEmail('expired')).rejects.toBeInstanceOf(BadRequestException);
-    await expect(service.verifyEmail('used')).rejects.toBeInstanceOf(BadRequestException);
-    expect(tx.passwordCredential.upsert).not.toHaveBeenCalled();
-  });
-
-  it('does not set credentials if the token expires while being consumed', async () => {
-    tx.emailVerificationToken.findFirst.mockResolvedValue({
-      userId: user.id,
-      pendingPasswordHash: 'password-hash',
-    });
-    tx.user.updateMany.mockResolvedValue({ count: 1 });
-    tx.emailVerificationToken.updateMany.mockResolvedValue({ count: 0 });
-    await expect(service.verifyEmail('expired')).rejects.toBeInstanceOf(BadRequestException);
-    expect(tx.passwordCredential.upsert).not.toHaveBeenCalled();
   });
 });

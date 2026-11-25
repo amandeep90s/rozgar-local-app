@@ -5,6 +5,8 @@ import type {
   RegistrationRequest,
   ResetPasswordRequest,
 } from '@repo/contracts';
+import { EmailVerificationProvider } from '@/modules/auth/providers/email-verification.provider.js';
+import { LoginProvider } from '@/modules/auth/providers/login.provider.js';
 import { PasswordRecoveryProvider } from '@/modules/auth/providers/password-recovery.provider.js';
 import { RegistrationProvider } from '@/modules/auth/providers/registration.provider.js';
 import { SessionProvider } from '@/modules/auth/providers/session.provider.js';
@@ -13,6 +15,8 @@ import { SessionProvider } from '@/modules/auth/providers/session.provider.js';
 export class AuthService {
   constructor(
     private readonly registration: RegistrationProvider,
+    private readonly emailVerification: EmailVerificationProvider,
+    private readonly loginProvider: LoginProvider,
     private readonly sessions: SessionProvider,
     private readonly passwordRecovery: PasswordRecoveryProvider,
   ) {}
@@ -22,11 +26,11 @@ export class AuthService {
   }
 
   verifyEmail(token: string): Promise<void> {
-    return this.registration.verifyEmail(token);
+    return this.emailVerification.verify(token);
   }
 
   login(input: LoginRequest) {
-    return this.sessions.login(input);
+    return this.loginProvider.login(input);
   }
 
   refresh(refreshToken: string) {
