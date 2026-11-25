@@ -10,15 +10,15 @@ import { VerificationMailProvider } from './verification-mail.provider.js';
 describe('RegistrationProvider', () => {
   const user = { id: 'user-id', emailVerifiedAt: null, status: 'ACTIVE' };
   const tx = {
-    user: { updateMany: vi.fn() },
+    user: { create: vi.fn(), updateMany: vi.fn() },
     emailVerificationToken: { findFirst: vi.fn(), updateMany: vi.fn() },
     passwordCredential: { upsert: vi.fn() },
-    userAuthProvider: { upsert: vi.fn() },
+    userAuthProvider: { create: vi.fn(), upsert: vi.fn() },
   };
   const db = {
-    user: { findUnique: vi.fn(), create: vi.fn() },
+    user: { findUnique: vi.fn() },
     emailVerificationToken: { create: vi.fn() },
-    $transaction: vi.fn(async (callback: (transaction: typeof tx) => Promise<void>) =>
+    $transaction: vi.fn(async (callback: (transaction: typeof tx) => Promise<unknown>) =>
       callback(tx),
     ),
   };
@@ -43,24 +43,28 @@ describe('RegistrationProvider', () => {
     service = module.get(RegistrationProvider);
     passwords.hash.mockResolvedValue('password-hash');
     db.user.findUnique.mockResolvedValue(null);
-    db.user.create.mockResolvedValue(user);
+    tx.user.create.mockResolvedValue(user);
     mail.send.mockResolvedValue(undefined);
   });
 
   it('creates a credential and identity and stores only a hashed verification token', async () => {
     await service.register({ name: 'Example', email: 'user@example.com', password: 'password123' });
 
-    expect(db.user.create).toHaveBeenCalledWith(
+    expect(tx.user.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           email: 'user@example.com',
           passwordCredential: { create: { passwordHash: 'password-hash' } },
-          authProviders: {
-            create: { provider: 'EMAIL_PASSWORD', providerUserId: expect.any(String) },
-          },
         }),
       }),
     );
+    expect(tx.userAuthProvider.create).toHaveBeenCalledWith({
+      data: {
+        userId: user.id,
+        provider: 'EMAIL_PASSWORD',
+        providerUserId: user.id,
+      },
+    });
     const token = mail.send.mock.calls[0]?.[1];
     expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(db.emailVerificationToken.create).toHaveBeenCalledWith({
@@ -75,7 +79,7 @@ describe('RegistrationProvider', () => {
   it('does not replace existing credentials before email ownership is verified', async () => {
     db.user.findUnique.mockResolvedValue(user);
     await service.register({ name: 'Example', email: 'user@example.com', password: 'password123' });
-    expect(db.user.create).not.toHaveBeenCalled();
+    expect(tx.user.create).not.toHaveBeenCalled();
     expect(db.emailVerificationToken.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ pendingPasswordHash: 'password-hash' }),
     });

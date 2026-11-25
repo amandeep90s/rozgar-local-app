@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import type { RegistrationRequest } from '@repo/contracts';
 import { Prisma } from '@repo/db/generated';
 import { PrismaService } from '@/infrastructure/database/prisma.service.js';
@@ -26,17 +26,24 @@ export class RegistrationProvider {
     });
 
     if (!user) {
-      const id = randomUUID();
       try {
-        user = await db.user.create({
-          data: {
-            id,
-            email: input.email,
-            name: input.name,
-            passwordCredential: { create: { passwordHash } },
-            authProviders: { create: { provider: 'EMAIL_PASSWORD', providerUserId: id } },
-          },
-          select: { id: true, emailVerifiedAt: true, status: true },
+        user = await db.$transaction(async (tx) => {
+          const createdUser = await tx.user.create({
+            data: {
+              email: input.email,
+              name: input.name,
+              passwordCredential: { create: { passwordHash } },
+            },
+            select: { id: true, emailVerifiedAt: true, status: true },
+          });
+          await tx.userAuthProvider.create({
+            data: {
+              userId: createdUser.id,
+              provider: 'EMAIL_PASSWORD',
+              providerUserId: createdUser.id,
+            },
+          });
+          return createdUser;
         });
       } catch (error) {
         if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {

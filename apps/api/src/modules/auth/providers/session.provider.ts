@@ -1,5 +1,4 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
 import type { LoginRequest, SessionResponse } from '@repo/contracts';
 import { PrismaService } from '@/infrastructure/database/prisma.service.js';
 import { PasswordProvider } from './password.provider.js';
@@ -40,12 +39,10 @@ export class SessionProvider {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const sessionId = randomUUID();
     const refreshToken = this.tokens.createOpaqueToken();
-    const accessToken = this.tokens.signAccess(user.id, sessionId);
     const now = new Date();
     const expiresAt = new Date(now.getTime() + SESSION_TTL_SECONDS * 1000);
-    await db.$transaction(async (tx) => {
+    const accessToken = await db.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT "id" FROM "users" WHERE "id" = ${user.id}::uuid FOR UPDATE`;
       const current = await tx.user.findFirst({
         where: {
@@ -59,16 +56,17 @@ export class SessionProvider {
       });
       if (!current) throw new UnauthorizedException('Invalid email or password');
       await tx.user.update({ where: { id: user.id }, data: { lastLoginAt: now } });
-      await tx.authSession.create({
+      const session = await tx.authSession.create({
         data: {
-          id: sessionId,
           userId: user.id,
           expiresAt,
           refreshTokens: {
             create: { tokenHash: this.tokens.hash(refreshToken), expiresAt },
           },
         },
+        select: { id: true },
       });
+      return this.tokens.signAccess(user.id, session.id);
     });
     return this.response(accessToken, refreshToken, SESSION_TTL_SECONDS);
   }
