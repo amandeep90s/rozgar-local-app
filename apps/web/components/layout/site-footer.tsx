@@ -4,6 +4,7 @@ import Link from 'next/link';
 export async function SiteFooter() {
   const home = await getTranslations('Home');
   const metadata = await getTranslations('Metadata');
+  const legal = await getTranslations('Legal');
 
   return (
     <footer className="mt-auto shrink-0 border-t border-auth-border bg-auth-surface text-auth-foreground">
@@ -29,6 +30,12 @@ export async function SiteFooter() {
             className="transition hover:text-auth-primary hover:underline"
           >
             {home('forEmployers')}
+          </Link>
+          <Link href="/terms" className="transition hover:text-auth-primary hover:underline">
+            {legal('terms.link')}
+          </Link>
+          <Link href="/privacy" className="transition hover:text-auth-primary hover:underline">
+            {legal('privacy.link')}
           </Link>
         </nav>
       </div>
