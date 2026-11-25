@@ -35,6 +35,7 @@ export class ResendEmailProvider extends EmailDeliveryProvider {
           to: [message.to],
           subject: message.subject,
           text: message.text,
+          html: message.html,
         }),
         signal: AbortSignal.timeout(10000),
       });

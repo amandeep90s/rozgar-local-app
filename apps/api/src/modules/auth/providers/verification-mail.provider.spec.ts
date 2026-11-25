@@ -27,6 +27,7 @@ describe('VerificationMailProvider', () => {
       to: 'user@example.com',
       subject: 'Your RozgarLocal account',
       text: expect.stringContaining('http://localhost:3000/verify-email?token=test-token'),
+      html: expect.stringContaining('http://localhost:3000/verify-email?token=test-token'),
     });
   });
 
@@ -37,6 +38,7 @@ describe('VerificationMailProvider', () => {
       to: 'user@example.com',
       subject: 'Your RozgarLocal password reset',
       text: expect.stringContaining('http://localhost:3000/reset-password?token=reset-token'),
+      html: expect.stringContaining('http://localhost:3000/reset-password?token=reset-token'),
     });
   });
 });
