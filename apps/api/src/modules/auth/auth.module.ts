@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthRateLimitGuard } from '@/modules/auth/guards/auth-rate-limit.guard.js';
 import { AuthService } from '@/modules/auth/services/auth.service.js';
 import { DatabaseModule } from '@/infrastructure/database/database.module.js';
 import { PasswordRecoveryProvider } from './providers/password-recovery.provider.js';
@@ -22,7 +21,6 @@ import { AuthController } from './auth.controller.js';
     SessionProvider,
     TokenProvider,
     PasswordRecoveryProvider,
-    AuthRateLimitGuard,
   ],
   exports: [AuthService],
 })
