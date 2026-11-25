@@ -11,6 +11,7 @@
     "db:generate": "turbo run db:generate",
     "db:push": "turbo run db:push",
     "db:migrate": "turbo run db:migrate",
+    "db:reset": "pnpm --filter @repo/db db:reset",
     "db:studio": "turbo run db:studio",
     "db:test": "turbo run db:test",
     "prepare": "husky"
