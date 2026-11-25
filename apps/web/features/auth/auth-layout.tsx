@@ -14,7 +14,11 @@ const getServerSnapshot = () => false;
 export function PreviewSubmit({ children }: { children: ReactNode }) {
   const isHydrated = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
   return (
-    <Button type="submit" className="h-10 w-full" disabled={!isHydrated}>
+    <Button
+      type="submit"
+      className="h-auto min-h-12 w-full rounded-full bg-auth-primary px-4 py-3 text-center text-base font-medium whitespace-normal text-auth-primary-foreground hover:bg-auth-primary-hover focus-visible:ring-auth-primary/40"
+      disabled={!isHydrated}
+    >
       {children}
     </Button>
   );
@@ -35,29 +39,40 @@ export function AuthLayout({
 }) {
   const t = useTranslations('Auth');
   return (
-    <main className="flex flex-1 items-start justify-center py-4 sm:py-12">
-      <Card className="w-full max-w-md [--card-spacing:--spacing(6)]">
-        <CardHeader className="gap-2">
-          <CardTitle className="text-2xl font-semibold">
+    <main className="flex flex-1 items-start justify-center rounded-3xl bg-auth-canvas px-3 py-6 sm:px-8 sm:py-12">
+      <Card className="w-full max-w-md gap-8 rounded-3xl bg-auth-surface text-auth-foreground shadow-sm ring-1 ring-auth-border [--card-spacing:--spacing(6)] sm:[--card-spacing:--spacing(8)]">
+        <CardHeader className="gap-3">
+          <CardTitle className="text-3xl leading-tight font-semibold tracking-tight">
             <h1>{title}</h1>
           </CardTitle>
-          <CardDescription>{description}</CardDescription>
+          <CardDescription className="text-sm leading-6 text-auth-muted">
+            {description}
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <p className="rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground">
-            {t('previewNotice')}
-          </p>
+        <CardContent className="space-y-6 [--input:var(--auth-input)] [--ring:var(--auth-primary)] [&_[data-slot=input]]:h-12 [&_[data-slot=input]]:rounded-lg [&_[data-slot=input]]:px-4">
           {children}
           {showGoogle && (
-            <Button type="button" variant="outline" className="h-10 w-full" disabled>
-              {t('googleComingSoon')}
-            </Button>
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 text-sm text-auth-muted">
+                <span aria-hidden="true" className="h-px flex-1 bg-auth-border" />
+                <span>{t('or')}</span>
+                <span aria-hidden="true" className="h-px flex-1 bg-auth-border" />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-auto min-h-12 w-full rounded-full border-auth-input bg-auth-surface px-4 py-3 text-center whitespace-normal text-auth-foreground"
+                disabled
+              >
+                {t('googleComingSoon')}
+              </Button>
+            </div>
           )}
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="border-t border-auth-border pt-6 text-center text-sm leading-6 text-auth-muted">
             {isLogin ? t('noAccount') : t('haveAccount')}{' '}
             <Link
               href={isLogin ? '/register' : '/login'}
-              className="font-medium text-foreground underline underline-offset-4"
+              className="font-medium text-auth-primary underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auth-primary"
             >
               {isLogin ? t('createAccount') : t('signIn')}
             </Link>

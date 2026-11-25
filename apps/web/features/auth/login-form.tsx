@@ -39,13 +39,18 @@ export function LoginForm() {
             type="password"
             autoComplete="current-password"
             labelAction={
-              <Link href="/forgot-password" className="text-sm underline-offset-4 hover:underline">
+              <Link
+                href="/forgot-password"
+                className="text-sm font-medium text-auth-primary underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-auth-primary"
+              >
                 {t('forgotLink')}
               </Link>
             }
           />
-          <PreviewSubmit>{t('signIn')}</PreviewSubmit>
         </FieldGroup>
+        <div className="mt-8">
+          <PreviewSubmit>{t('signIn')}</PreviewSubmit>
+        </div>
       </form>
     </AuthLayout>
   );
