@@ -25,3 +25,8 @@ minimumReleaseAgeExclude:
   - lucide-react@1.80.0
   - next-intl@4.16.2
   - react-resizable-panels@4.24.2
+overrides:
+  effect@<=3.22.0: ^3.22.1
+  minimatch@>=7.0.0 <11.0.1: ^11.0.1
+  tmp@<0.2.6: ^0.2.6
+  undici@<6.29.1: ^6.29.1
