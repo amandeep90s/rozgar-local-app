@@ -2,7 +2,8 @@
 
 RozgarLocal is a work-in-progress local employment platform. The repository
 contains a Next.js web app, a NestJS API, shared contracts and a Prisma
-database package. Authentication and marketplace features are not implemented.
+database package. Authentication and marketplace features are not implemented;
+the web app includes UI-only authentication previews.
 
 ## Prerequisites
 
@@ -21,9 +22,11 @@ Open `http://localhost:3000`. The home page checks the API at
 `http://127.0.0.1:3001/health`. This is a process liveness check, not a
 database readiness check. The API also retains its starter `GET /` route.
 
-The web app supports English, Punjabi, and Hindi using `next-intl`. The
-language selector stores the choice in a browser cookie (English is the
-default); URLs do not change and preferences are not yet synced to accounts.
+The web app supports English, Punjabi, and Hindi using `next-intl`. Selecting a
+language from the header menu applies it immediately and stores the choice in
+a browser cookie (English is the default); URLs do not change and preferences
+are not yet synced to accounts. Without JavaScript, the header offers language
+buttons instead.
 Translations live in `apps/web/messages`.
 
 The API reads `PORT` from the process environment or the root `.env` file
