@@ -16,3 +16,12 @@ minimumReleaseAgeExclude:
   - "@oxlint-tsgolint/win32-arm64@7.0.2008"
   - "@oxlint-tsgolint/win32-x64@7.0.2008"
   - oxlint-tsgolint@7.0.2008
+  - "@nestjs/common@12.6.1"
+  - "@nestjs/core@12.6.1"
+  - "@nestjs/platform-express@12.6.1"
+  - "@nestjs/testing@12.6.1"
+  - "@types/node@26.6.10"
+  - "@types/react@19.3.2"
+  - lucide-react@1.80.0
+  - next-intl@4.16.2
+  - react-resizable-panels@4.24.2
