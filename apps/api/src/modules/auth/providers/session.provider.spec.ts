@@ -1,11 +1,11 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PrismaService } from '@/infrastructure/database/prisma.service.js';
-import { PasswordService } from './password.service.js';
-import { SessionService } from './session.service.js';
-import { TokenService } from './token.service.js';
+import { PasswordProvider } from './password.provider.js';
+import { SessionProvider } from './session.provider.js';
+import { TokenProvider } from './token.provider.js';
 
-describe('SessionService', () => {
+describe('SessionProvider', () => {
   const tx = {
     $queryRaw: vi.fn(),
     user: { findFirst: vi.fn(), update: vi.fn() },
@@ -27,19 +27,19 @@ describe('SessionService', () => {
     signAccess: vi.fn(),
     verifyAccess: vi.fn(),
   };
-  let service: SessionService;
+  let service: SessionProvider;
 
   beforeEach(async () => {
     vi.resetAllMocks();
     const module = await Test.createTestingModule({
       providers: [
-        SessionService,
+        SessionProvider,
         { provide: PrismaService, useValue: { client: db } },
-        { provide: PasswordService, useValue: passwords },
-        { provide: TokenService, useValue: tokens },
+        { provide: PasswordProvider, useValue: passwords },
+        { provide: TokenProvider, useValue: tokens },
       ],
     }).compile();
-    service = module.get(SessionService);
+    service = module.get(SessionProvider);
     tokens.hash.mockReturnValue('hash');
     tokens.signAccess.mockReturnValue('access');
     tokens.createOpaqueToken.mockReturnValue('next-token');

@@ -2,11 +2,12 @@ import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { createHash } from 'node:crypto';
 import { PrismaService } from '@/infrastructure/database/prisma.service.js';
-import { PasswordService } from './password.service.js';
-import { RegistrationService } from './registration.service.js';
-import { VerificationMailService } from './verification-mail.service.js';
+import { PasswordProvider } from './password.provider.js';
+import { RegistrationProvider } from './registration.provider.js';
+import { TokenProvider } from './token.provider.js';
+import { VerificationMailProvider } from './verification-mail.provider.js';
 
-describe('RegistrationService', () => {
+describe('RegistrationProvider', () => {
   const user = { id: 'user-id', emailVerifiedAt: null, status: 'ACTIVE' };
   const tx = {
     user: { updateMany: vi.fn() },
@@ -22,20 +23,24 @@ describe('RegistrationService', () => {
     ),
   };
   const passwords = { hash: vi.fn() };
+  const tokens = {
+    hash: vi.fn((token: string) => createHash('sha256').update(token).digest('hex')),
+  };
   const mail = { getSettings: vi.fn(), send: vi.fn() };
-  let service: RegistrationService;
+  let service: RegistrationProvider;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     const module = await Test.createTestingModule({
       providers: [
-        RegistrationService,
+        RegistrationProvider,
         { provide: PrismaService, useValue: { client: db } },
-        { provide: PasswordService, useValue: passwords },
-        { provide: VerificationMailService, useValue: mail },
+        { provide: PasswordProvider, useValue: passwords },
+        { provide: TokenProvider, useValue: tokens },
+        { provide: VerificationMailProvider, useValue: mail },
       ],
     }).compile();
-    service = module.get(RegistrationService);
+    service = module.get(RegistrationProvider);
     passwords.hash.mockResolvedValue('password-hash');
     db.user.findUnique.mockResolvedValue(null);
     db.user.create.mockResolvedValue(user);

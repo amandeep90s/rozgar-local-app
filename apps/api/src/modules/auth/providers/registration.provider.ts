@@ -1,17 +1,19 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import type { RegistrationRequest } from '@repo/contracts';
 import { Prisma } from '@repo/db/generated';
 import { PrismaService } from '@/infrastructure/database/prisma.service.js';
-import { PasswordService } from './password.service.js';
-import { VerificationMailService } from './verification-mail.service.js';
+import { PasswordProvider } from './password.provider.js';
+import { TokenProvider } from './token.provider.js';
+import { VerificationMailProvider } from './verification-mail.provider.js';
 
 @Injectable()
-export class RegistrationService {
+export class RegistrationProvider {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly passwords: PasswordService,
-    private readonly mail: VerificationMailService,
+    private readonly passwords: PasswordProvider,
+    private readonly tokens: TokenProvider,
+    private readonly mail: VerificationMailProvider,
   ) {}
 
   async register(input: RegistrationRequest): Promise<void> {
@@ -54,7 +56,7 @@ export class RegistrationService {
       await db.emailVerificationToken.create({
         data: {
           userId: user.id,
-          tokenHash: this.hashToken(token),
+          tokenHash: this.tokens.hash(token),
           pendingPasswordHash: passwordHash,
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         },
@@ -65,7 +67,7 @@ export class RegistrationService {
 
   async verifyEmail(token: string): Promise<void> {
     const db = this.prisma.client;
-    const tokenHash = this.hashToken(token);
+    const tokenHash = this.tokens.hash(token);
     await db.$transaction(async (tx) => {
       const now = new Date();
       const verification = await tx.emailVerificationToken.findFirst({
@@ -121,9 +123,5 @@ export class RegistrationService {
         data: { consumedAt: now, pendingPasswordHash: null },
       });
     });
-  }
-
-  private hashToken(token: string): string {
-    return createHash('sha256').update(token).digest('hex');
   }
 }

@@ -1,10 +1,10 @@
 import { ConfigService } from '@nestjs/config';
 import { ServiceUnavailableException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { VerificationMailService } from './verification-mail.service.js';
+import { VerificationMailProvider } from './verification-mail.provider.js';
 
-describe('VerificationMailService', () => {
-  let service: VerificationMailService;
+describe('VerificationMailProvider', () => {
+  let service: VerificationMailProvider;
 
   beforeEach(async () => {
     const settings: Record<string, string> = {
@@ -14,11 +14,11 @@ describe('VerificationMailService', () => {
     };
     const module = await Test.createTestingModule({
       providers: [
-        VerificationMailService,
+        VerificationMailProvider,
         { provide: ConfigService, useValue: { get: (name: string) => settings[name] } },
       ],
     }).compile();
-    service = module.get(VerificationMailService);
+    service = module.get(VerificationMailProvider);
   });
 
   afterEach(() => {

@@ -2,15 +2,15 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import type { LoginRequest, SessionResponse } from '@repo/contracts';
 import { PrismaService } from '@/infrastructure/database/prisma.service.js';
-import { PasswordService } from './password.service.js';
-import { ACCESS_TTL_SECONDS, SESSION_TTL_SECONDS, TokenService } from './token.service.js';
+import { PasswordProvider } from './password.provider.js';
+import { ACCESS_TTL_SECONDS, SESSION_TTL_SECONDS, TokenProvider } from './token.provider.js';
 
 @Injectable()
-export class SessionService {
+export class SessionProvider {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly passwords: PasswordService,
-    private readonly tokens: TokenService,
+    private readonly passwords: PasswordProvider,
+    private readonly tokens: TokenProvider,
   ) {}
 
   async login(input: LoginRequest): Promise<SessionResponse> {

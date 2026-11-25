@@ -1,17 +1,17 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import type { ForgotPasswordRequest, ResetPasswordRequest } from '@repo/contracts';
 import { PrismaService } from '@/infrastructure/database/prisma.service.js';
-import { PasswordService } from './password.service.js';
-import { TokenService } from './token.service.js';
-import { VerificationMailService } from './verification-mail.service.js';
+import { PasswordProvider } from './password.provider.js';
+import { TokenProvider } from './token.provider.js';
+import { VerificationMailProvider } from './verification-mail.provider.js';
 
 @Injectable()
-export class PasswordRecoveryService {
+export class PasswordRecoveryProvider {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly passwords: PasswordService,
-    private readonly tokens: TokenService,
-    private readonly mail: VerificationMailService,
+    private readonly passwords: PasswordProvider,
+    private readonly tokens: TokenProvider,
+    private readonly mail: VerificationMailProvider,
   ) {}
 
   async requestReset(input: ForgotPasswordRequest): Promise<void> {

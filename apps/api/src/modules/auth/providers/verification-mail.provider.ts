@@ -20,8 +20,8 @@ const mailConfigSchema = z.object({
 });
 
 @Injectable()
-export class VerificationMailService {
-  private readonly logger = new Logger(VerificationMailService.name);
+export class VerificationMailProvider {
+  private readonly logger = new Logger(VerificationMailProvider.name);
 
   constructor(private readonly config: ConfigService) {}
 

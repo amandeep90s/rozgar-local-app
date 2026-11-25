@@ -7,7 +7,7 @@ export const ACCESS_TTL_SECONDS = 15 * 60;
 export const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 @Injectable()
-export class TokenService {
+export class TokenProvider {
   constructor(
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
