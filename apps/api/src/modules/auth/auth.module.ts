@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { DatabaseModule } from '../database/database.module.js';
+import { DatabaseModule } from '@/infrastructure/database/database.module.js';
 import { AuthController } from './auth.controller.js';
 import { PasswordService } from './password.service.js';
 import { RegistrationService } from './registration.service.js';

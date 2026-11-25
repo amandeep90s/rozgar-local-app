@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import type { RegistrationRequest } from '@repo/contracts';
 import { Prisma } from '@repo/db/generated';
-import { PrismaService } from '../database/prisma.service.js';
+import { PrismaService } from '@/infrastructure/database/prisma.service.js';
 import { PasswordService } from './password.service.js';
 import { VerificationMailService } from './verification-mail.service.js';
 

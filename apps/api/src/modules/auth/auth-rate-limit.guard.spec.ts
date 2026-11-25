@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { createHmac } from 'node:crypto';
 import request from 'supertest';
-import { PrismaService } from '../database/prisma.service.js';
+import { PrismaService } from '@/infrastructure/database/prisma.service.js';
 import { AuthRateLimitGuard } from './auth-rate-limit.guard.js';
 
 @Controller('auth')

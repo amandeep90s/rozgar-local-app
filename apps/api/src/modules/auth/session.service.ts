@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import type { LoginRequest, SessionResponse } from '@repo/contracts';
-import { PrismaService } from '../database/prisma.service.js';
+import { PrismaService } from '@/infrastructure/database/prisma.service.js';
 import { PasswordService } from './password.service.js';
 import { ACCESS_TTL_SECONDS, SESSION_TTL_SECONDS, TokenService } from './token.service.js';
 

@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 import { isIP } from 'node:net';
 import type { Request } from 'express';
-import { PrismaService } from '../database/prisma.service.js';
+import { PrismaService } from '@/infrastructure/database/prisma.service.js';
 
 @Injectable()
 export class AuthRateLimitGuard implements CanActivate {

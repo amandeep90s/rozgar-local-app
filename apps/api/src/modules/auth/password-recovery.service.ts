@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import type { ForgotPasswordRequest, ResetPasswordRequest } from '@repo/contracts';
-import { PrismaService } from '../database/prisma.service.js';
+import { PrismaService } from '@/infrastructure/database/prisma.service.js';
 import { PasswordService } from './password.service.js';
 import { TokenService } from './token.service.js';
 import { VerificationMailService } from './verification-mail.service.js';
