@@ -17,7 +17,7 @@ export class PrismaJobModerationRepository implements JobModerationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(query: AdminJobModerationQuery): Promise<AdminJobListResponse> {
-    const where = { status: query.status ?? 'PENDING_REVIEW' };
+    const where: Prisma.JobWhereInput = query.status ? { status: query.status } : {};
     const [records, total] = await Promise.all([
       this.prisma.client.job.findMany({
         where,

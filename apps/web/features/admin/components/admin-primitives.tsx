@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { AlertCircle, LoaderCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, LoaderCircle, RefreshCw, ShieldCheck } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,13 +30,20 @@ export function AdminPageHeader({
   description?: string;
   children?: ReactNode;
 }) {
+  const t = useTranslations('Admin');
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-8 flex flex-col gap-4 border-b border-auth-border/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
       <div>
+        <p className="mb-2 inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] text-auth-primary uppercase">
+          <ShieldCheck className="size-4" aria-hidden="true" />
+          {t('adminConsole')}
+        </p>
         <h1 className="text-2xl font-semibold tracking-tight text-auth-foreground sm:text-3xl">
           {title}
         </h1>
-        {description && <p className="mt-2 text-sm leading-6 text-auth-muted">{description}</p>}
+        {description && (
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-auth-muted">{description}</p>
+        )}
       </div>
       {children}
     </div>
@@ -112,13 +120,13 @@ export function AdminDataTable<T>({
   emptyDescription: string;
 }) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
+    <Table className="min-w-[760px]">
+      <TableHeader className="bg-auth-primary/10">
+        <TableRow className="border-auth-border hover:bg-auth-primary/10">
           {columns.map((column) => (
             <TableHead
               key={column.header}
-              className="h-11 bg-auth-canvas/80 text-xs font-semibold tracking-wide text-auth-muted"
+              className="h-12 bg-auth-primary/10 px-4 text-xs font-semibold tracking-[0.08em] text-auth-muted uppercase"
             >
               {column.header}
             </TableHead>
@@ -128,15 +136,20 @@ export function AdminDataTable<T>({
       <TableBody>
         {rows.length ? (
           rows.map((row) => (
-            <TableRow key={getRowKey(row)}>
+            <TableRow
+              key={getRowKey(row)}
+              className="border-auth-border/70 odd:bg-auth-canvas/25 hover:bg-auth-primary/5"
+            >
               {columns.map((column) => (
-                <TableCell key={column.header}>{column.cell(row)}</TableCell>
+                <TableCell key={column.header} className="px-4 py-3.5 text-auth-foreground">
+                  {column.cell(row)}
+                </TableCell>
               ))}
             </TableRow>
           ))
         ) : (
-          <TableRow>
-            <TableCell colSpan={columns.length} className="h-48 whitespace-normal">
+          <TableRow className="border-auth-border/70 hover:bg-transparent">
+            <TableCell colSpan={columns.length} className="h-48 px-4 text-center whitespace-normal">
               <Empty>
                 <EmptyHeader>
                   <EmptyTitle>{emptyTitle}</EmptyTitle>

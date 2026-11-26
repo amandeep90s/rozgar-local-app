@@ -178,6 +178,10 @@
   box-shadow: 0 2px 8px color-mix(in oklab, var(--auth-foreground) 4%, transparent);
 }
 
+.admin-theme [data-slot='card']:has([data-slot='table']) {
+  padding-block: 0;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

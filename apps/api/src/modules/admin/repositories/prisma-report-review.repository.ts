@@ -17,9 +17,7 @@ export class PrismaReportReviewRepository implements ReportReviewRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(query: AdminReportQuery): Promise<AdminReportListResponse> {
-    const where: Prisma.ReportWhereInput = query.status
-      ? { status: query.status }
-      : { status: { in: ['OPEN', 'UNDER_REVIEW'] } };
+    const where: Prisma.ReportWhereInput = query.status ? { status: query.status } : {};
     const [records, total] = await Promise.all([
       this.prisma.client.report.findMany({
         where,

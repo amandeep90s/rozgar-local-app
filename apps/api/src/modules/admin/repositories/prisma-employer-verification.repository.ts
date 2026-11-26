@@ -23,7 +23,7 @@ export class PrismaEmployerVerificationRepository implements EmployerVerificatio
   ): Promise<AdminEmployerVerificationListResponse> {
     const where: Prisma.EmployerProfileWhereInput = query.status
       ? { verificationStatus: query.status }
-      : { verificationStatus: { in: ['PENDING', 'UNDER_REVIEW'] } };
+      : {};
     const [records, total] = await Promise.all([
       this.prisma.client.employerProfile.findMany({
         where,

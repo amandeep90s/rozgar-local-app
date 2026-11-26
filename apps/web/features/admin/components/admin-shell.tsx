@@ -2,11 +2,16 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { BriefcaseBusiness } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { LanguageSelector } from '@/features/language/language-selector';
+import { getCurrentUser } from '@/features/auth/current-user';
 import { SessionControls } from '@/features/auth/session-controls';
 import { AdminNavigation } from './admin-navigation';
 
 export async function AdminShell({ children }: { children: ReactNode }) {
   const t = await getTranslations('Admin');
+  const session = await getCurrentUser();
+  const account = session.state === 'signed-in' ? session.user : { name: null, email: 'Admin' };
   return (
     <div className="admin-theme min-h-dvh bg-auth-canvas text-auth-foreground">
       <header className="sticky top-0 z-20 border-b border-auth-border/80 bg-auth-surface/90 backdrop-blur-xl">
@@ -17,11 +22,13 @@ export async function AdminShell({ children }: { children: ReactNode }) {
             </span>
             <span>{t('brand')}</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="hidden rounded-full border border-auth-border bg-auth-canvas px-3 py-1.5 text-xs font-medium text-auth-muted sm:inline">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="hidden rounded-full border border-auth-border bg-auth-canvas px-3 py-1.5 text-xs font-medium text-auth-muted md:inline-flex">
               {t('adminConsole')}
             </span>
-            <SessionControls refreshNeeded={false} />
+            <LanguageSelector />
+            <ThemeToggle />
+            <SessionControls refreshNeeded={false} account={account} />
           </div>
         </div>
         <div className="w-full border-t border-auth-border/70 px-2 lg:hidden">
