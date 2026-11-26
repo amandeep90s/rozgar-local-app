@@ -32,8 +32,10 @@ export function AdminPageHeader({
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+        <h1 className="text-2xl font-semibold tracking-tight text-auth-foreground sm:text-3xl">
+          {title}
+        </h1>
+        {description && <p className="mt-2 text-sm leading-6 text-auth-muted">{description}</p>}
       </div>
       {children}
     </div>
@@ -114,7 +116,12 @@ export function AdminDataTable<T>({
       <TableHeader>
         <TableRow>
           {columns.map((column) => (
-            <TableHead key={column.header}>{column.header}</TableHead>
+            <TableHead
+              key={column.header}
+              className="h-11 bg-auth-canvas/80 text-xs font-semibold tracking-wide text-auth-muted"
+            >
+              {column.header}
+            </TableHead>
           ))}
         </TableRow>
       </TableHeader>

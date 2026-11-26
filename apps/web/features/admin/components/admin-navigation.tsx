@@ -32,8 +32,8 @@ export function AdminNavigation() {
             className={cn(
               'shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
               active
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                ? 'bg-auth-primary text-auth-primary-foreground shadow-sm'
+                : 'text-auth-muted hover:bg-auth-canvas hover:text-auth-primary',
             )}
           >
             {t(key)}

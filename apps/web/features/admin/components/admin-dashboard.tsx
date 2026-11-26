@@ -72,11 +72,15 @@ export function AdminDashboard({ initialData }: { initialData: AdminDashboardRes
         {cards.map(({ title, value, detail, icon: Icon }) => (
           <Card key={title}>
             <CardHeader className="flex grid-cols-[1fr_auto] items-center">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-              <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
+              <CardTitle className="text-sm font-medium text-auth-muted">{title}</CardTitle>
+              <span className="flex size-10 items-center justify-center rounded-xl bg-auth-primary/10 text-auth-primary">
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold tabular-nums">{value.toLocaleString(locale)}</p>
+              <p className="text-3xl font-semibold tracking-tight text-auth-foreground tabular-nums">
+                {value.toLocaleString(locale)}
+              </p>
               <CardDescription className="mt-1">{detail}</CardDescription>
             </CardContent>
           </Card>
