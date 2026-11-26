@@ -13,6 +13,8 @@ import {
   shouldSkipAccountThrottle,
 } from '@/modules/auth/auth-throttling.js';
 import { AuthModule } from '@/modules/auth/auth.module.js';
+import { JobSeekerModule } from '@/modules/job-seeker/job-seeker.module.js';
+import { EmployersModule } from '@/modules/employers/employers.module.js';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { AuthModule } from '@/modules/auth/auth.module.js';
     }),
     AuthModule,
     AdminModule,
+    JobSeekerModule,
+    EmployersModule,
   ],
   controllers: [AppController],
   providers: [
