@@ -1,99 +1,100 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { ArrowRight, BadgeCheck, Building2, CircleCheck, FileUser, UserRound } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
 import type { EmployerProfileResponse, JobSeekerProfileResponse } from '@repo/contracts';
-import type { PortalRole } from '../portal-config';
 
-export function PortalOverview({
+export async function PortalOverview({
   role,
   profile,
-}: {
-  role: PortalRole;
-  profile: EmployerProfileResponse | JobSeekerProfileResponse;
-}) {
+}:
+  | { role: 'employer'; profile: EmployerProfileResponse }
+  | {
+      role: 'job-seeker';
+      profile: JobSeekerProfileResponse;
+    }) {
+  const t = await getTranslations('Portal');
   const employer = role === 'employer';
-  const title = employer
-    ? (profile as EmployerProfileResponse).businessName
-    : (profile as JobSeekerProfileResponse).fullName;
+  const title = employer ? profile.businessName : profile.fullName;
   const complete = Boolean(profile.completedAt);
   const status = employer
-    ? (profile as EmployerProfileResponse).verification.verificationStatus.replaceAll('_', ' ')
+    ? t(`verificationStatuses.${profile.verification.verificationStatus}`)
     : complete
-      ? 'PROFILE COMPLETE'
-      : 'PROFILE INCOMPLETE';
+      ? t('dashboard.complete')
+      : t('dashboard.inProgress');
   const cards = employer
     ? [
         {
-          label: 'Business profile',
-          value: complete ? 'Complete' : 'In progress',
-          detail: 'Add your organization details and contact information.',
+          label: t('dashboard.businessProfile'),
+          value: complete ? t('dashboard.complete') : t('dashboard.inProgress'),
+          detail: t('dashboard.businessHint'),
           icon: Building2,
         },
         {
-          label: 'Verification',
+          label: t('verification'),
           value: status,
-          detail: 'Build trust by completing your business verification.',
+          detail: t('dashboard.verificationHint'),
           icon: BadgeCheck,
         },
         {
-          label: 'Public visibility',
-          value: profile.showEmail || profile.showPhone ? 'On' : 'Private',
-          detail: 'Choose which contact details are visible to candidates.',
+          label: t('dashboard.publicVisibility'),
+          value:
+            profile.showEmail || profile.showPhone ? t('dashboard.on') : t('dashboard.private'),
+          detail: t('dashboard.employerContactHint'),
           icon: UserRound,
         },
       ]
     : [
         {
-          label: 'Profile',
-          value: complete ? 'Complete' : 'In progress',
-          detail: 'Give employers a clear picture of your experience.',
+          label: t('profile'),
+          value: complete ? t('dashboard.complete') : t('dashboard.inProgress'),
+          detail: t('dashboard.profileHint'),
           icon: FileUser,
         },
         {
-          label: 'Skills',
-          value: `${(profile as JobSeekerProfileResponse).skills.length} added`,
-          detail: 'Add skills to make your profile easier to discover.',
+          label: t('skills'),
+          value: t('dashboard.skillsAdded', { count: profile.skills.length }),
+          detail: t('dashboard.skillsHint'),
           icon: BadgeCheck,
         },
         {
-          label: 'Public visibility',
-          value: profile.showEmail || profile.showPhone ? 'On' : 'Private',
-          detail: 'Choose which contact details employers can see.',
+          label: t('dashboard.contactVisibility'),
+          value:
+            profile.showEmail || profile.showPhone ? t('dashboard.on') : t('dashboard.private'),
+          detail: t('dashboard.seekerContactHint'),
           icon: UserRound,
         },
       ];
   return (
     <div className="space-y-8">
-      <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#153d2c] via-[#145b3a] to-[#16764b] px-6 py-8 text-white shadow-lg sm:px-9 sm:py-10">
+      <section className="relative overflow-hidden rounded-[2rem] bg-linear-to-br from-[#153d2c] via-[#145b3a] to-[#16764b] px-6 py-8 text-white shadow-lg sm:px-9 sm:py-10">
         <div
-          className="absolute -top-20 -right-10 size-64 rounded-full border-[36px] border-white/5"
+          className="absolute -top-20 -right-10 size-64 rounded-full border-36 border-white/5"
           aria-hidden="true"
         />
         <div className="relative max-w-3xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-emerald-50">
             <CircleCheck className="size-4" aria-hidden="true" />
-            {employer ? 'EMPLOYER WORKSPACE' : 'JOB SEEKER WORKSPACE'}
+            {t(employer ? 'workspaceEmployer' : 'workspaceSeeker')}
           </span>
           <h1 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">
             {title
-              ? `Welcome, ${title}`
+              ? t('dashboard.welcome', { name: title })
               : employer
-                ? 'Build your employer profile'
-                : 'Make your next move'}
+                ? t('dashboard.buildProfile')
+                : t('dashboard.nextMove')}
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50/85 sm:text-base">
-            {employer
-              ? 'Manage your business details and verification status from one place.'
-              : 'Keep your experience and skills up to date so employers can find the right fit.'}
+            {employer ? t('dashboard.employerIntro') : t('dashboard.seekerIntro')}
           </p>
           <Link
             href={`/${role}/profile`}
             className={buttonVariants({
-              className: 'mt-6 h-10 rounded-xl bg-white px-4 text-[#145b3a] hover:bg-emerald-50',
+              className: 'mt-6 h-10 rounded-lg px-4 text-[#145b3a] hover:bg-emerald-50',
             })}
           >
-            Update profile <ArrowRight className="size-4" aria-hidden="true" />
+            {t('dashboard.updateProfile')} <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </div>
       </section>
@@ -119,22 +120,20 @@ export function PortalOverview({
       </section>
       <Card className="rounded-2xl border-auth-border bg-auth-surface shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Your next step</CardTitle>
-          <CardDescription>Complete the profile details needed for your workspace.</CardDescription>
+          <CardTitle className="text-lg">{t('dashboard.nextStep')}</CardTitle>
+          <CardDescription>{t('dashboard.nextStepHint')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-auth-primary/10 text-auth-primary">
+            <span className="mt-0.5 flex size-9 items-center justify-center rounded-lg bg-auth-primary/10 text-auth-primary">
               <CircleCheck className="size-4" aria-hidden="true" />
             </span>
             <div>
               <p className="font-medium">
-                {complete ? 'Your profile is complete' : 'Finish setting up your profile'}
+                {t(complete ? 'dashboard.profileComplete' : 'dashboard.finishProfile')}
               </p>
               <p className="mt-1 text-sm text-auth-muted">
-                {complete
-                  ? 'You can return any time to make changes.'
-                  : 'Your progress is saved when you save your profile.'}
+                {complete ? t('dashboard.editHint') : t('dashboard.saveHint')}
               </p>
             </div>
           </div>
@@ -142,10 +141,10 @@ export function PortalOverview({
             href={`/${role}/profile`}
             className={buttonVariants({
               variant: 'outline',
-              className: 'rounded-xl border-auth-border',
+              className: 'rounded-lg border-auth-border',
             })}
           >
-            Open profile <ArrowRight className="size-4" aria-hidden="true" />
+            {t('dashboard.openProfile')} <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </CardContent>
       </Card>

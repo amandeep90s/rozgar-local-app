@@ -1,3 +1,5 @@
+import 'server-only';
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import {
@@ -7,8 +9,10 @@ import {
   jobSeekerProfileResponseSchema,
   jobSeekerProfileUpdateSchema,
   jobSeekerSkillsResponseSchema,
+  jobSeekerSkillsQuerySchema,
   type EmployerProfileUpdate,
   type JobSeekerProfileUpdate,
+  type JobSeekerSkillsQuery,
 } from '@repo/contracts';
 import { authApiFetch } from '@/lib/auth-api';
 import { accessCookie } from '@/features/auth/session-cookies';
@@ -41,7 +45,9 @@ async function request<T extends z.ZodType>(path: string, schema: T, init: Reque
         ? 'Your session has expired. Sign in again.'
         : response.status === 403
           ? 'This workspace is not available for your account.'
-          : 'The service is temporarily unavailable. Please try again.';
+          : response.status === 400 || response.status === 409
+            ? 'Check the submitted information. Business identity changes are restricted after verification submission.'
+            : 'The service is temporarily unavailable. Please try again.';
     throw new PortalApiError(response.status, message);
   }
   let payload: unknown;
@@ -59,7 +65,18 @@ async function request<T extends z.ZodType>(path: string, schema: T, init: Reque
   return parsed.data;
 }
 
-export const getEmployerProfile = () => request('/employers/me', employerProfileResponseSchema);
+async function optionalProfile<T>(operation: () => Promise<T>): Promise<T | null> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof PortalApiError && error.status === 404) return null;
+    throw error;
+  }
+}
+
+export const getEmployerProfile = cache(() =>
+  optionalProfile(() => request('/employers/me', employerProfileResponseSchema)),
+);
 export const getEmployerVerification = () =>
   request('/employers/me/verification', employerVerificationResponseSchema);
 export const saveEmployerProfile = (body: EmployerProfileUpdate) =>
@@ -70,8 +87,9 @@ export const saveEmployerProfile = (body: EmployerProfileUpdate) =>
   });
 export const completeEmployerProfile = () =>
   request('/employers/me/complete', employerProfileResponseSchema, { method: 'POST' });
-export const getJobSeekerProfile = () =>
-  request('/job-seeker/profile', jobSeekerProfileResponseSchema);
+export const getJobSeekerProfile = cache(() =>
+  optionalProfile(() => request('/job-seeker/profile', jobSeekerProfileResponseSchema)),
+);
 export const saveJobSeekerProfile = (body: JobSeekerProfileUpdate) =>
   request('/job-seeker/profile', jobSeekerProfileResponseSchema, {
     method: 'PUT',
@@ -80,9 +98,13 @@ export const saveJobSeekerProfile = (body: JobSeekerProfileUpdate) =>
   });
 export const completeJobSeekerProfile = () =>
   request('/job-seeker/profile/complete', jobSeekerProfileResponseSchema, { method: 'POST' });
-export const listJobSeekerSkills = (search = '') => {
-  const params = new URLSearchParams({ page: '1', pageSize: '100' });
-  if (search.trim()) params.set('search', search.trim());
+export const listJobSeekerSkills = (input: JobSeekerSkillsQuery) => {
+  const query = jobSeekerSkillsQuerySchema.parse(input);
+  const params = new URLSearchParams({
+    page: String(query.page),
+    pageSize: String(query.pageSize),
+  });
+  if (query.search) params.set('search', query.search);
   return request(`/job-seeker/skills?${params}`, jobSeekerSkillsResponseSchema);
 };
 

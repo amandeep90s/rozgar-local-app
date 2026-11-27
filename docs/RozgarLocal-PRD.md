@@ -1044,8 +1044,8 @@ search; populate the skill catalogue before relying on skill selection.
 Email registration accepts `JOB_SEEKER` or `EMPLOYER` as its public role;
 omitting it preserves the existing `JOB_SEEKER` default. Existing account
 roles are not changed by another registration attempt. `GET /auth/me`
-returns the current role. The existing web registration form does not yet
-provide a role selection.
+returns the current role. The web registration form provides a single-role
+selection, defaulting to job seeker, and sends the selected role to the API.
 
 The employer profile routes require an authenticated employer and return
 `Cache-Control: no-store`. `GET /employers/me` returns 404 until a draft
@@ -1059,6 +1059,26 @@ verification submission; implementing the approved re-review policy
 requires a safe verification workflow. Future dashboard and job endpoints
 must enforce profile completion and verification as applicable.
 
+The web now has separate employer and job seeker profile and contact
+settings pages, plus an employer verification-status page. Profile forms
+use React Hook Form and the shared form controls, and support first-time
+draft creation and save-and-complete. Incomplete profiles are redirected
+to onboarding before accessing overview, settings, or verification pages.
+Document uploads and job/application pages remain unavailable until their
+corresponding APIs and policies are implemented.
+
+Both profile forms now share Indian state/city dropdowns backed by
+server-side `country-state-city` and cached through React Query. This package
+replaces `country-state-city-nextjs` with user approval because the latter's
+default endpoint was unavailable and its reference data was incomplete.
+Changing state clears the city. If a saved profile already has a city, a
+replacement city is required before saving a state change to prevent partial
+updates from retaining the old city. New profiles still allow state-only drafts.
+Existing names absent from the catalogue are preserved with a notice.
+Dashboard overview, workspace labels, and employer verification status/level
+labels use English, Hindi, and Punjabi translations. Dependency installation,
+browser testing, and full type-checking remain pending.
+
 ### 10.1 Pending profile-related API work
 
 The basic profile draft, retrieval, and completion routes described above
@@ -1069,8 +1089,11 @@ implemented.
 
 **Job seeker**
 
-- [ ] Populate the active skills catalogue so the existing skills lookup
-      and profile skill selection can be used.
+- [ ] Run the master-data seed against the intended database so the
+      existing skills lookup and profile selection can be used. Category
+      and skill seed files are implemented; locations will use
+      server-side `country-state-city` rather than database seed data. Database
+      execution remains pending.
 - [ ] Implement applying to eligible jobs, application history and status
       retrieval, and withdrawal. Confirm permitted withdrawal states and
       reapplication rules before implementing those transitions.

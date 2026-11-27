@@ -19,11 +19,8 @@ export default async function EmployerLayout({
       return <PortalGate expired message="Refreshing your session…" />;
     if (error instanceof PortalApiError && error.status === 403)
       redirect('/login?reason=wrong-role');
-    return (
-      <PortalGate
-        message={error instanceof Error ? error.message : 'The employer workspace is unavailable.'}
-      />
-    );
+    console.error('Employer workspace failed', error instanceof Error ? error.name : 'unknown');
+    return <PortalGate message="The employer workspace is unavailable. Please try again." />;
   }
   return <PortalShell role="employer">{children}</PortalShell>;
 }
