@@ -96,7 +96,7 @@ export function AuthLayout({
               {description}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 [--input:var(--auth-input)] [--ring:var(--auth-primary)] [&_[data-slot=input]]:h-12 [&_[data-slot=input]]:rounded-lg [&_[data-slot=input]]:px-4">
+          <CardContent className="space-y-6 [--input:var(--auth-input)] [--ring:var(--auth-primary)] [&_[data-slot=input-group-control]]:h-full [&_[data-slot=input-group]]:h-12 [&_[data-slot=input-group]]:rounded-lg [&_[data-slot=input]]:h-12 [&_[data-slot=input]]:rounded-lg [&_[data-slot=input]]:px-4">
             {children}
             {showGoogle && (
               <div className="space-y-6">
