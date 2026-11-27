@@ -17,6 +17,12 @@ export const categories = [
   { slug: "security", name: "Security" },
   { slug: "beauty-wellness", name: "Beauty and wellness" },
   { slug: "it-digital", name: "IT and digital services" },
+  { slug: "passenger-transport", name: "Passenger transport" },
+  { slug: "finance-accounting", name: "Finance and accounting" },
+  { slug: "textiles-garments", name: "Textiles and garments" },
+  { slug: "property-facilities", name: "Property and facilities services" },
+  { slug: "waste-recycling", name: "Waste management and recycling" },
+  { slug: "events-entertainment", name: "Events and entertainment" },
   { slug: "other", name: "Other" },
 ] as const;
 
