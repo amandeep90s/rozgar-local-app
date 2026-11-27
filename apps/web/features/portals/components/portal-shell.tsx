@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { BriefcaseBusiness } from 'lucide-react';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { LanguageSelector } from '@/features/language/language-selector';
@@ -9,14 +10,15 @@ import { PortalNavigation } from './portal-navigation';
 import type { PortalRole } from '../portal-config';
 
 export async function PortalShell({ children, role }: { children: ReactNode; role: PortalRole }) {
+  const t = await getTranslations('Portal');
   const session = await getCurrentUser();
   const account =
     session.state === 'signed-in'
       ? session.user
-      : { name: null, email: role === 'employer' ? 'Employer' : 'Job seeker' };
-  const title = role === 'employer' ? 'Employer workspace' : 'Job seeker workspace';
+      : { name: null, email: t(role === 'employer' ? 'workspaceEmployer' : 'workspaceSeeker') };
+  const title = t(role === 'employer' ? 'workspaceEmployer' : 'workspaceSeeker');
   return (
-    <div className="admin-theme min-h-dvh bg-auth-canvas text-auth-foreground">
+    <div className="admin-theme min-h-dvh bg-auth-canvas text-auth-foreground [--input:var(--auth-input)] [--ring:var(--auth-primary)] **:data-[slot=input]:h-12 **:data-[slot=input]:rounded-lg **:data-[slot=input]:px-4 **:data-[slot=input-group]:h-12 **:data-[slot=input-group]:rounded-lg **:data-[slot=input-group-control]:h-full **:data-[slot=input-group-control]:px-4 **:data-[slot=native-select]:h-12 **:data-[slot=native-select]:rounded-lg **:data-[slot=native-select]:px-4 **:data-[slot=select-trigger]:h-12 **:data-[slot=select-trigger]:rounded-lg **:data-[slot=select-trigger]:px-4 **:data-[slot=textarea]:min-h-32 **:data-[slot=textarea]:rounded-lg **:data-[slot=textarea]:px-4 **:data-[slot=textarea]:py-3">
       <header className="sticky top-0 z-20 border-b border-auth-border/80 bg-auth-surface/90 backdrop-blur-xl">
         <div className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <Link href={`/${role}`} className="flex items-center gap-3 font-semibold tracking-tight">
@@ -42,7 +44,9 @@ export async function PortalShell({ children, role }: { children: ReactNode; rol
         <aside className="hidden w-64 shrink-0 border-r border-auth-border bg-auth-surface/75 p-4 lg:block">
           <PortalNavigation role={role} />
         </aside>
-        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="min-w-0 flex-1 p-4 **:data-[slot=button]:min-h-12 **:data-[slot=button]:px-4 **:data-[slot=button]:py-3 sm:p-6 lg:p-8">
+          {children}
+        </main>
       </div>
     </div>
   );

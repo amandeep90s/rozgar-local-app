@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormInput } from '@/components/form/form-input';
+import { FormCombobox } from '@/components/form/form-combobox';
 import { useAuthErrorMessage } from '@/features/auth/use-auth-error-message';
 import { AuthLayout, PreviewSubmit } from '@/features/auth/auth-layout';
 import { FieldGroup } from '@/components/ui/field';
@@ -17,7 +18,7 @@ export function RegisterForm() {
   const [result, setResult] = useState<'accepted' | 'invalid' | 'unavailable' | null>(null);
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerFormSchema),
-    defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
+    defaultValues: { name: '', email: '', password: '', confirmPassword: '', role: 'JOB_SEEKER' },
   });
 
   return (
@@ -30,12 +31,26 @@ export function RegisterForm() {
         <form
           method="post"
           noValidate
-          onSubmit={form.handleSubmit(async ({ name, email, password }) => {
+          onSubmit={form.handleSubmit(async ({ name, email, password, role }) => {
             setResult(null);
-            setResult(await registerAccount({ name, email, password }));
+            setResult(await registerAccount({ name, email, password, role }));
           })}
         >
           <FieldGroup>
+            <FormCombobox
+              control={form.control}
+              name="role"
+              label={t('accountRole')}
+              description={t('roleHint')}
+              placeholder={t('selectRole')}
+              emptyMessage={t('noMatchingOptions')}
+              formatError={formatError}
+              options={[
+                { value: 'JOB_SEEKER', label: t('jobSeeker') },
+                { value: 'EMPLOYER', label: t('employer') },
+              ]}
+              readOnly={form.formState.isSubmitting}
+            />
             <FormInput
               control={form.control}
               formatError={formatError}

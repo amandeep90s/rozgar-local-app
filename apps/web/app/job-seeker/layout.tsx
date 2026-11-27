@@ -19,13 +19,8 @@ export default async function JobSeekerLayout({
       return <PortalGate expired message="Refreshing your session…" />;
     if (error instanceof PortalApiError && error.status === 403)
       redirect('/login?reason=wrong-role');
-    return (
-      <PortalGate
-        message={
-          error instanceof Error ? error.message : 'The job seeker workspace is unavailable.'
-        }
-      />
-    );
+    console.error('Job seeker workspace failed', error instanceof Error ? error.name : 'unknown');
+    return <PortalGate message="The job seeker workspace is unavailable. Please try again." />;
   }
   return <PortalShell role="job-seeker">{children}</PortalShell>;
 }
