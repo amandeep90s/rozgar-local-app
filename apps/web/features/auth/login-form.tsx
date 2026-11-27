@@ -8,13 +8,15 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormInput } from '@/components/form/form-input';
+import { FormPasswordInput } from '@/components/form/form-password-input';
 import { useAuthErrorMessage } from '@/features/auth/use-auth-error-message';
 import { AuthLayout, PreviewSubmit } from '@/features/auth/auth-layout';
 import { FieldGroup } from '@/components/ui/field';
 import { signIn } from '@/features/auth/session-actions';
 import { getWorkspacePathAction } from '@/features/portals/portal-actions';
+import { GoogleButton } from './google-button';
 
-export function LoginForm() {
+export function LoginForm({ googleError }: { googleError?: string }) {
   const t = useTranslations('Auth');
   const router = useRouter();
   const [result, setResult] = useState<'invalid' | 'unavailable' | null>(null);
@@ -25,7 +27,12 @@ export function LoginForm() {
   });
 
   return (
-    <AuthLayout title={t('signIn')} description={t('loginDescription')} showGoogle isLogin>
+    <AuthLayout
+      title={t('signIn')}
+      description={t('loginDescription')}
+      google={<GoogleButton mode="login" />}
+      isLogin
+    >
       <form
         method="post"
         noValidate
@@ -58,12 +65,11 @@ export function LoginForm() {
             autoComplete="email"
             placeholder="you@example.com"
           />
-          <FormInput
+          <FormPasswordInput
             control={form.control}
             formatError={formatError}
             name="password"
             label={t('password')}
-            type="password"
             autoComplete="current-password"
             labelAction={
               <Link
@@ -78,6 +84,11 @@ export function LoginForm() {
         {result && (
           <p role="alert" className="mt-4 text-sm text-destructive">
             {t(result === 'invalid' ? 'loginInvalid' : 'sessionUnavailable')}
+          </p>
+        )}
+        {googleError && (
+          <p role="alert" className="mt-4 text-sm text-destructive">
+            {t(googleError === 'unavailable' ? 'sessionUnavailable' : 'googleFailed')}
           </p>
         )}
         <div className="mt-8">

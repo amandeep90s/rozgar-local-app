@@ -31,11 +31,11 @@ import {
   AdminPageHeader,
   AdminStatusBadge,
   formatAdminDate,
-  formatAdminEnum,
 } from './admin-primitives';
 
 export function JobModerationReview({ initialData }: { initialData: AdminJobDetailResponse }) {
   const t = useTranslations('Admin');
+  const portalT = useTranslations('Portal.jobsPage');
   const locale = useLocale();
   const [reason, setReason] = useState('');
   const [removeOpen, setRemoveOpen] = useState(false);
@@ -72,7 +72,7 @@ export function JobModerationReview({ initialData }: { initialData: AdminJobDeta
   return (
     <div className="space-y-6">
       <AdminPageHeader title={data.title} description={data.employer.businessName ?? undefined}>
-        <AdminStatusBadge status={data.status} />
+        <AdminStatusBadge status={data.status} label={portalT(`statuses.${data.status}`)} />
       </AdminPageHeader>
       {(job.isError || mutation.isError) && (
         <AdminNotice
@@ -94,9 +94,15 @@ export function JobModerationReview({ initialData }: { initialData: AdminJobDeta
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Detail label={t('employmentType')} value={formatAdminEnum(data.employmentType)} />
-              <Detail label={t('workMode')} value={formatAdminEnum(data.workMode)} />
-              <Detail label={t('experience')} value={formatAdminEnum(data.experienceLevel)} />
+              <Detail
+                label={t('employmentType')}
+                value={portalT(`employmentTypes.${data.employmentType}`)}
+              />
+              <Detail label={t('workMode')} value={portalT(`workModes.${data.workMode}`)} />
+              <Detail
+                label={t('experience')}
+                value={portalT(`experienceLevels.${data.experienceLevel}`)}
+              />
               <Detail label={t('openings')} value={String(data.openings)} />
               <Detail
                 label={t('location')}
@@ -112,7 +118,7 @@ export function JobModerationReview({ initialData }: { initialData: AdminJobDeta
                   data.salaryMin,
                   data.salaryMax,
                   data.salaryCurrency,
-                  formatAdminEnum(data.salaryPeriod),
+                  portalT(`salaryPeriods.${data.salaryPeriod}`),
                 ]
                   .filter(Boolean)
                   .join(' ')}
@@ -160,7 +166,7 @@ export function JobModerationReview({ initialData }: { initialData: AdminJobDeta
             <Button
               type="button"
               className="w-full"
-              disabled={mutation.isPending || !reason.trim()}
+              disabled={data.status !== 'PENDING_REVIEW' || mutation.isPending || !reason.trim()}
               onClick={() => moderate('APPROVE')}
             >
               {t('approveJob')}
@@ -169,10 +175,28 @@ export function JobModerationReview({ initialData }: { initialData: AdminJobDeta
               type="button"
               variant="secondary"
               className="w-full"
-              disabled={mutation.isPending || !reason.trim()}
+              disabled={data.status !== 'PENDING_REVIEW' || mutation.isPending || !reason.trim()}
               onClick={() => moderate('REJECT')}
             >
               {t('rejectJob')}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full"
+              disabled={data.status !== 'PUBLISHED' || mutation.isPending || !reason.trim()}
+              onClick={() => moderate('HIDE')}
+            >
+              {t('hideJob')}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full"
+              disabled={data.status !== 'HIDDEN' || mutation.isPending || !reason.trim()}
+              onClick={() => moderate('RESTORE')}
+            >
+              {t('restoreJob')}
             </Button>
             <AlertDialog open={removeOpen} onOpenChange={setRemoveOpen}>
               <AlertDialogTrigger
@@ -181,7 +205,13 @@ export function JobModerationReview({ initialData }: { initialData: AdminJobDeta
                     type="button"
                     variant="destructive"
                     className="w-full"
-                    disabled={mutation.isPending || !reason.trim()}
+                    disabled={
+                      !['DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'PAUSED', 'HIDDEN'].includes(
+                        data.status,
+                      ) ||
+                      mutation.isPending ||
+                      !reason.trim()
+                    }
                   />
                 }
               >
