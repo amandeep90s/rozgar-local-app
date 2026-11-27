@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { create } from 'zustand';
 import type { JobSeekerSkillsResponse } from '@repo/contracts';
+import { JOB_SEEKER_SKILLS_PAGE_SIZE } from './portal-config';
 import { searchSkillsAction } from './portal-actions';
 import { runPortalAction } from './portal-client';
 
@@ -32,7 +33,7 @@ export function useSkillsSearch(initialData: JobSeekerSkillsResponse) {
       runPortalAction(() =>
         searchSkillsAction({
           page: state.page,
-          pageSize: 25,
+          pageSize: JOB_SEEKER_SKILLS_PAGE_SIZE,
           ...(search ? { search } : {}),
         }),
       ),

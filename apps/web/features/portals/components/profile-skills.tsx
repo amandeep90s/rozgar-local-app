@@ -57,6 +57,7 @@ export function ProfileSkills({
           name="skillIds"
           label={t('skills')}
           disabled={disabled}
+          className="sm:grid-cols-2 lg:grid-cols-3"
           options={items.map((skill) => ({
             value: skill.id,
             label: skill.name,
@@ -67,7 +68,7 @@ export function ProfileSkills({
       {!state.query.isPending && !state.query.isError && items.length === 0 && (
         <p>{t('noSkills')}</p>
       )}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-center gap-3">
         <Button
           type="button"
           variant="outline"
@@ -76,7 +77,12 @@ export function ProfileSkills({
         >
           {t('previous')}
         </Button>
-        <span>{state.page}</span>
+        <span
+          aria-current="page"
+          className="flex size-10 items-center justify-center rounded-xl bg-auth-canvas text-sm font-medium text-auth-foreground"
+        >
+          {state.page}
+        </span>
         <Button
           type="button"
           variant="outline"

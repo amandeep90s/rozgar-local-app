@@ -2,11 +2,12 @@ import { BadgeCheck, UserRound } from 'lucide-react';
 import { AdminStatusBadge } from '@/features/admin/components/admin-primitives';
 import { JobSeekerProfileForm } from '@/features/portals/components/job-seeker-profile-form';
 import { getJobSeekerProfile, listJobSeekerSkills } from '@/features/portals/portal-api';
+import { JOB_SEEKER_SKILLS_PAGE_SIZE } from '@/features/portals/portal-config';
 
 export default async function JobSeekerProfilePage() {
   const [profile, skillCatalog] = await Promise.all([
     getJobSeekerProfile(),
-    listJobSeekerSkills({ page: 1, pageSize: 25 }),
+    listJobSeekerSkills({ page: 1, pageSize: JOB_SEEKER_SKILLS_PAGE_SIZE }),
   ]);
   return (
     <div className="w-full space-y-7">
