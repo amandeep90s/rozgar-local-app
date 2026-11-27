@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { toast } from '@/components/ui/toast';
 import type { PortalActionResult } from './portal-actions';
 import { PortalRequestError, runPortalAction } from './portal-client';
 
@@ -20,6 +21,7 @@ export function usePortalSubmit() {
     try {
       const data = await runPortalAction(action);
       setMessage(t('saved'));
+      toast.add({ title: t('saved'), type: 'success' });
       router.refresh();
       return data;
     } catch (error) {

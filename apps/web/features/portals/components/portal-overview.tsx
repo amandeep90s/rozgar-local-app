@@ -68,9 +68,9 @@ export async function PortalOverview({
       ];
   return (
     <div className="space-y-8">
-      <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#153d2c] via-[#145b3a] to-[#16764b] px-6 py-8 text-white shadow-lg sm:px-9 sm:py-10">
+      <section className="relative overflow-hidden rounded-[2rem] bg-linear-to-br from-[#153d2c] via-[#145b3a] to-[#16764b] px-6 py-8 text-white shadow-lg sm:px-9 sm:py-10">
         <div
-          className="absolute -top-20 -right-10 size-64 rounded-full border-[36px] border-white/5"
+          className="absolute -top-20 -right-10 size-64 rounded-full border-36 border-white/5"
           aria-hidden="true"
         />
         <div className="relative max-w-3xl">
