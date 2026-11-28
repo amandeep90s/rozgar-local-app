@@ -33,7 +33,7 @@ export function AdminPageHeader({
 }) {
   const t = useTranslations('Admin');
   return (
-    <div className="relative isolate mb-6 flex flex-col gap-4 overflow-hidden rounded-3xl border border-auth-border/80 bg-gradient-to-br from-auth-surface via-auth-surface to-auth-primary/5 p-5 shadow-lg shadow-auth-foreground/[0.035] sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+    <div className="relative isolate mb-6 flex flex-col gap-4 overflow-hidden rounded-3xl border border-auth-border/80 bg-linear-to-br from-auth-surface via-auth-surface to-auth-primary/5 p-5 shadow-lg shadow-auth-foreground/[0.035] sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:p-7">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-16 -right-10 -z-10 size-48 rounded-full bg-auth-primary/10 blur-3xl"
@@ -148,7 +148,7 @@ export function AdminDataTable<T>({
           rows.map((row) => (
             <article
               key={getRowKey(row)}
-              className="rounded-2xl border border-auth-border/80 bg-auth-surface p-4 shadow-sm shadow-auth-foreground/[0.03]"
+              className="rounded-2xl border border-auth-border/80 bg-auth-surface p-4 shadow-sm shadow-auth-foreground/3"
             >
               <dl className="grid gap-3">
                 {columns.map((column) => (
@@ -171,7 +171,7 @@ export function AdminDataTable<T>({
       </div>
 
       <div className="hidden overflow-x-auto lg:block">
-        <Table className="min-w-[760px]">
+        <Table className="min-w-190">
           <TableHeader className="bg-auth-primary/10">
             <TableRow className="border-auth-border hover:bg-auth-primary/10">
               {columns.map((column) => (

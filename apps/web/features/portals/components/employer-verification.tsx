@@ -191,7 +191,7 @@ export function EmployerVerification({
       )}
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
-        <Card className="overflow-hidden rounded-3xl border-auth-border/80 shadow-sm shadow-auth-foreground/[0.025]">
+        <Card className="overflow-hidden rounded-3xl border-auth-border/80 shadow-sm shadow-auth-foreground/2.5">
           <CardHeader className="border-b border-auth-border/70 bg-auth-canvas/35 p-5 sm:p-6">
             <div className="flex items-center gap-3">
               <span className="flex size-10 items-center justify-center rounded-xl bg-auth-primary/8 text-auth-primary">
@@ -251,7 +251,7 @@ export function EmployerVerification({
         </Card>
 
         {canChangeDocuments && (
-          <Card className="overflow-hidden rounded-3xl border-auth-border/80 shadow-sm shadow-auth-foreground/[0.025]">
+          <Card className="overflow-hidden rounded-3xl border-auth-border/80 shadow-sm shadow-auth-foreground/2.5">
             <CardHeader className="border-b border-auth-border/70 bg-auth-canvas/35 p-5 sm:p-6">
               <div className="flex items-center gap-3">
                 <span className="flex size-10 items-center justify-center rounded-xl bg-auth-primary/8 text-auth-primary">
@@ -268,7 +268,7 @@ export function EmployerVerification({
                 aria-label={t('documentType')}
                 value={documentType}
                 onChange={(event) => setDocumentType(event.target.value as EmployerDocumentType)}
-                className="w-full [&_[data-slot=native-select]]:h-11 [&_[data-slot=native-select]]:rounded-xl"
+                className="w-full **:data-[slot=native-select]:h-11 **:data-[slot=native-select]:rounded-xl"
               >
                 <NativeSelectOption value="GST_CERTIFICATE">GST certificate</NativeSelectOption>
                 <NativeSelectOption value="UDYAM_CERTIFICATE">UDYAM certificate</NativeSelectOption>

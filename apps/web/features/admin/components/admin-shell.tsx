@@ -20,7 +20,7 @@ export async function AdminShell({ children }: { children: ReactNode }) {
             href="/admin"
             className="group flex items-center gap-3 font-semibold tracking-tight"
           >
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-auth-primary to-auth-primary-hover text-auth-primary-foreground shadow-md shadow-auth-primary/15 transition-transform group-hover:scale-[1.03]">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-linear-to-br from-auth-primary to-auth-primary-hover text-auth-primary-foreground shadow-md shadow-auth-primary/15 transition-transform group-hover:scale-[1.03]">
               <BriefcaseBusiness className="size-5" aria-hidden="true" />
             </span>
             <span className="text-[0.95rem]">{t('brand')}</span>
@@ -40,7 +40,7 @@ export async function AdminShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <div className="flex min-h-[calc(100dvh-4.5rem)] w-full">
-        <aside className="sticky top-[4.5rem] hidden h-[calc(100dvh-4.5rem)] w-64 shrink-0 border-r border-auth-border/80 bg-auth-surface/70 p-4 lg:block">
+        <aside className="sticky top-18 hidden h-[calc(100dvh-4.5rem)] w-64 shrink-0 border-r border-auth-border/80 bg-auth-surface/70 p-4 lg:block">
           <AdminNavigation />
         </aside>
         <main className="min-w-0 flex-1 bg-[radial-gradient(ellipse_at_top_left,color-mix(in_oklab,var(--auth-primary)_5%,transparent),transparent_42%)] p-4 sm:p-6 lg:p-8 xl:p-10">

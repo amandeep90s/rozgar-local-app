@@ -33,7 +33,7 @@ export function AdminNavigation() {
             className={cn(
               'flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition duration-200',
               active
-                ? 'bg-gradient-to-r from-auth-primary to-auth-primary-hover text-auth-primary-foreground shadow-md shadow-auth-primary/15'
+                ? 'bg-linear-to-r from-auth-primary to-auth-primary-hover text-auth-primary-foreground shadow-md shadow-auth-primary/15'
                 : 'text-auth-muted hover:bg-auth-canvas hover:text-auth-foreground',
             )}
           >
