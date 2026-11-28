@@ -9,6 +9,10 @@ const environmentSchema = z.object({
     .transform(Number)
     .pipe(z.number().int().min(1).max(65535))
     .default(3001),
+  CLOUDINARY_CLOUD_NAME: z.string().trim().min(1).optional(),
+  CLOUDINARY_API_KEY: z.string().trim().min(1).optional(),
+  CLOUDINARY_API_SECRET: z.string().trim().min(1).optional(),
+  CLOUDINARY_VERIFICATION_UPLOADS_ENABLED: z.enum(['true', 'false']).default('false'),
 });
 
 export function validateEnvironment(environment: Record<string, unknown>) {

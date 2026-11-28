@@ -24,6 +24,13 @@ export const employerVerificationStatusSchema = z.enum([
   "NEEDS_MORE_INFO",
   "SUSPENDED",
 ]);
+export const adminEmployerDocumentAccessResponseSchema = z.strictObject({
+  url: z.url(),
+  expiresAt: z.iso.datetime(),
+});
+export type AdminEmployerDocumentAccessResponse = z.infer<
+  typeof adminEmployerDocumentAccessResponseSchema
+>;
 export const employerTypeSchema = z.enum([
   "COMPANY",
   "SMALL_BUSINESS",
@@ -86,7 +93,6 @@ export const adminEmployerVerificationDetailResponseSchema =
       z.strictObject({
         id: z.uuid(),
         documentType: employerDocumentTypeSchema,
-        storageKey: z.string(),
         originalName: z.string().nullable(),
         mimeType: z.string().nullable(),
         fileSizeBytes: z.string().nullable(),

@@ -85,6 +85,8 @@
   --auth-primary: #16764b;
   --auth-primary-hover: #105e3b;
   --auth-primary-foreground: #ffffff;
+  --input: var(--auth-input);
+  --ring: var(--auth-primary);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -129,6 +131,8 @@
   --auth-primary: #a3d8b7;
   --auth-primary-hover: #bce7cd;
   --auth-primary-foreground: #12311f;
+  --input: var(--auth-input);
+  --ring: var(--auth-primary);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -160,7 +164,7 @@
   --accent: color-mix(in oklab, var(--auth-primary) 10%, var(--auth-canvas));
   --accent-foreground: var(--auth-primary);
   --border: var(--auth-border);
-  --input: var(--auth-border);
+  --input: var(--auth-input);
   --ring: var(--auth-primary);
   --sidebar: var(--auth-surface);
   --sidebar-foreground: var(--auth-foreground);
@@ -173,9 +177,34 @@
   --radius: 0.875rem;
 }
 
+/* Keep form control sizing and surface treatment consistent across every workspace. */
+[data-slot='input'],
+[data-slot='native-select'],
+[data-slot='select-trigger'] {
+  height: 3rem;
+  border-radius: 0.5rem;
+  padding-inline: 1rem;
+}
+
+[data-slot='input-group'] {
+  height: 3rem;
+  border-radius: 0.5rem;
+}
+
+[data-slot='input-group-control'] {
+  height: 100%;
+}
+
+[data-slot='textarea'] {
+  min-height: 8rem;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
 .admin-theme [data-slot='card'] {
   border-color: var(--auth-border);
-  box-shadow: 0 2px 8px color-mix(in oklab, var(--auth-foreground) 4%, transparent);
+  border-radius: 1.25rem;
+  box-shadow: 0 8px 24px color-mix(in oklab, var(--auth-foreground) 4%, transparent);
 }
 
 .admin-theme [data-slot='card']:has([data-slot='table']) {

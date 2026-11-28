@@ -6,6 +6,9 @@ import {
   employerProfileResponseSchema,
   employerProfileUpdateSchema,
   employerVerificationResponseSchema,
+  employerVerificationDocumentUploadSchema,
+  employerVerificationDocumentListResponseSchema,
+  employerVerificationDocumentResponseSchema,
   employerJobResponseSchema,
   employerJobListResponseSchema,
   employerJobsQuerySchema,
@@ -13,12 +16,18 @@ import {
   jobSeekerProfileUpdateSchema,
   jobSeekerSkillsResponseSchema,
   jobSeekerSkillsQuerySchema,
+  applicationResponseSchema,
+  applicationPageQuerySchema,
+  seekerApplicationListResponseSchema,
+  employerApplicationListResponseSchema,
   type EmployerProfileUpdate,
   type JobSeekerProfileUpdate,
   type JobSeekerSkillsQuery,
   type EmployerJobCreate,
   type EmployerJobUpdate,
   type EmployerJobsQuery,
+  type CreateApplication,
+  type UpdateApplicationStatus,
 } from '@repo/contracts';
 import { authApiFetch } from '@/lib/auth-api';
 import { accessCookie } from '@/features/auth/session-cookies';
@@ -38,6 +47,7 @@ async function request<T extends z.ZodType>(
   schema: T,
   init: RequestInit = {},
   jobs = false,
+  applications = false,
 ) {
   const token = (await cookies()).get(accessCookie)?.value;
   if (!token) throw new PortalApiError(401, 'Your session has expired. Sign in again.');
@@ -51,33 +61,48 @@ async function request<T extends z.ZodType>(
     throw new PortalApiError(0, 'The service is temporarily unavailable. Please try again.');
   }
   if (!response.ok) {
-    const message = jobs
+    const message = applications
       ? response.status === 401
         ? 'Your session has expired. Sign in again.'
         : response.status === 403
-          ? 'You are not allowed to perform this action.'
+          ? 'A job seeker or employer account is required for this action.'
           : response.status === 404
-            ? 'Job not found.'
+            ? 'The job or application could not be found.'
             : response.status === 409
-              ? 'The job has changed or cannot be updated in its current state.'
+              ? 'The application already exists or this action is no longer available.'
               : response.status === 400
-                ? 'Check the job details and expiry date.'
-                : 'The service is temporarily unavailable. Please try again.'
-      : response.status === 401
-        ? 'Your session has expired. Sign in again.'
-        : response.status === 403
-          ? 'This workspace is not available for your account.'
-          : response.status === 400 || response.status === 409
-            ? 'Check the submitted information. Business identity changes are restricted after verification submission.'
-            : 'The service is temporarily unavailable. Please try again.';
+                ? 'Complete your job seeker profile and check the application details.'
+                : 'The application service is temporarily unavailable.'
+      : jobs
+        ? response.status === 401
+          ? 'Your session has expired. Sign in again.'
+          : response.status === 403
+            ? 'You are not allowed to perform this action.'
+            : response.status === 404
+              ? 'Job not found.'
+              : response.status === 409
+                ? 'The job has changed or cannot be updated in its current state.'
+                : response.status === 400
+                  ? 'Check the job details and expiry date.'
+                  : 'The service is temporarily unavailable. Please try again.'
+        : response.status === 401
+          ? 'Your session has expired. Sign in again.'
+          : response.status === 403
+            ? 'This workspace is not available for your account.'
+            : response.status === 400 || response.status === 409
+              ? 'Check the submitted information. Business identity changes are restricted after verification submission.'
+              : 'The service is temporarily unavailable. Please try again.';
     throw new PortalApiError(response.status, message);
   }
   let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch (error) {
-    console.error('Portal API returned invalid JSON', error);
-    throw new PortalApiError(502, 'The service returned an invalid response.');
+  if (response.status === 204) payload = {};
+  else {
+    try {
+      payload = await response.json();
+    } catch (error) {
+      console.error('Portal API returned invalid JSON', error);
+      throw new PortalApiError(502, 'The service returned an invalid response.');
+    }
   }
   const parsed = schema.safeParse(payload);
   if (!parsed.success) {
@@ -101,6 +126,26 @@ export const getEmployerProfile = cache(() =>
 );
 export const getEmployerVerification = () =>
   request('/employers/me/verification', employerVerificationResponseSchema);
+export const listEmployerVerificationDocuments = () =>
+  request('/employers/me/verification/documents', employerVerificationDocumentListResponseSchema);
+export const uploadEmployerVerificationDocument = (
+  body: z.infer<typeof employerVerificationDocumentUploadSchema>,
+) =>
+  request('/employers/me/verification/documents', employerVerificationDocumentResponseSchema, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+export const submitEmployerVerification = () =>
+  request('/employers/me/verification/submit', employerProfileResponseSchema, {
+    method: 'POST',
+  });
+export const deleteEmployerVerificationDocument = (documentId: string) =>
+  request(
+    `/employers/me/verification/documents/${encodeURIComponent(documentId)}`,
+    z.strictObject({}),
+    { method: 'DELETE' },
+  );
 export const saveEmployerProfile = (body: EmployerProfileUpdate) =>
   request('/employers/me', employerProfileResponseSchema, {
     method: 'PUT',
@@ -120,6 +165,68 @@ export const saveJobSeekerProfile = (body: JobSeekerProfileUpdate) =>
   });
 export const completeJobSeekerProfile = () =>
   request('/job-seeker/profile/complete', jobSeekerProfileResponseSchema, { method: 'POST' });
+export const applyToJob = (jobId: string, body: CreateApplication) =>
+  request(
+    `/job-seeker/jobs/${encodeURIComponent(jobId)}/applications`,
+    applicationResponseSchema,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+    false,
+    true,
+  );
+export const listJobSeekerApplications = (page = 1, pageSize = 20) => {
+  const query = applicationPageQuerySchema.parse({ page, pageSize });
+  const params = new URLSearchParams({
+    page: String(query.page),
+    pageSize: String(query.pageSize),
+  });
+  return request(
+    `/job-seeker/applications?${params}`,
+    seekerApplicationListResponseSchema,
+    {},
+    false,
+    true,
+  );
+};
+export const withdrawJobSeekerApplication = (id: string) =>
+  request(
+    `/job-seeker/applications/${encodeURIComponent(id)}/withdraw`,
+    applicationResponseSchema,
+    {
+      method: 'POST',
+    },
+    false,
+    true,
+  );
+export const listEmployerApplications = (jobId: string, page = 1, pageSize = 20) => {
+  const query = applicationPageQuerySchema.parse({ page, pageSize });
+  const params = new URLSearchParams({
+    page: String(query.page),
+    pageSize: String(query.pageSize),
+  });
+  return request(
+    `/employers/me/jobs/${encodeURIComponent(jobId)}/applications?${params}`,
+    employerApplicationListResponseSchema,
+    {},
+    true,
+    true,
+  );
+};
+export const updateEmployerApplicationStatus = (id: string, body: UpdateApplicationStatus) =>
+  request(
+    `/employers/me/applications/${encodeURIComponent(id)}/status`,
+    applicationResponseSchema,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+    true,
+    true,
+  );
 export const listJobSeekerSkills = (input: JobSeekerSkillsQuery) => {
   const query = jobSeekerSkillsQuerySchema.parse(input);
   const params = new URLSearchParams({

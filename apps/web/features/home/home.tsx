@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Input } from '@/components/ui/input';
 import { getApiHealth } from '@/features/home/api-health';
 import {
@@ -99,27 +99,25 @@ export default async function Home() {
                   <label htmlFor="job-location" className="text-sm font-medium">
                     {t('location')}
                   </label>
-                  <div className="relative">
-                    <MapPin
-                      className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-auth-muted"
-                      aria-hidden="true"
-                    />
-                    <Input
+                  <InputGroup className="h-12 rounded-xl border-auth-border bg-auth-surface dark:bg-auth-surface">
+                    <InputGroupInput
                       id="job-location"
                       placeholder={t('locationPlaceholder')}
                       aria-describedby="search-preview"
-                      className="h-12 border-auth-border bg-auth-surface pr-4 pl-11 text-auth-foreground placeholder:text-auth-muted dark:bg-auth-surface"
+                      className="h-12 text-auth-foreground placeholder:text-auth-muted dark:bg-auth-surface"
                       disabled
                     />
-                  </div>
+                    <InputGroupAddon className="text-auth-muted">
+                      <MapPin className="size-4" aria-hidden="true" />
+                    </InputGroupAddon>
+                  </InputGroup>
                 </div>
-                <Button
-                  type="button"
+                <Link
+                  href="/jobs"
                   className="h-auto min-h-12 w-full rounded-full bg-auth-primary px-4 py-3 text-center font-medium whitespace-normal text-auth-primary-foreground"
-                  disabled
                 >
                   {t('searchJobs')}
-                </Button>
+                </Link>
               </div>
             </div>
           </div>
