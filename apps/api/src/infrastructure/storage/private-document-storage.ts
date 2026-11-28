@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from 'node:crypto';
+import { createHash, createHmac, randomUUID } from 'node:crypto';
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -182,9 +182,7 @@ export class PrivateDocumentStorage {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, value]) => `${key}=${value}`)
       .join('&');
-    const signature = createHmac('sha256', apiSecret)
-      .update(signaturePayload)
-      .digest('hex');
+    const signature = createHmac('sha256', apiSecret).update(signaturePayload).digest('hex');
     const form = new URLSearchParams({
       ...params,
       api_key: apiKey,
