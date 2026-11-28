@@ -70,7 +70,7 @@ export function ReportQueue({
           retryText={t('retry')}
         />
       )}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-auth-border/80 bg-auth-surface p-4 shadow-sm shadow-auth-foreground/[0.025] sm:p-5">
         <p className="text-sm text-muted-foreground">{t('reportQueueDescription')}</p>
         <NativeSelect
           className="w-full sm:w-auto"

@@ -21,7 +21,7 @@ export function AdminNavigation() {
   return (
     <nav
       aria-label={t('navigation')}
-      className="flex gap-1 overflow-x-auto px-3 py-2 lg:flex-col lg:gap-1.5 lg:px-0 lg:py-0"
+      className="flex gap-1 overflow-x-auto px-3 py-2 lg:flex-col lg:gap-2 lg:px-0 lg:py-0"
     >
       {links.map(({ href, key, icon: Icon }) => {
         const active = href === '/admin' ? pathname === href : pathname.startsWith(href);
@@ -31,10 +31,10 @@ export function AdminNavigation() {
             href={href}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'flex shrink-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              'flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition duration-200',
               active
-                ? 'bg-auth-primary text-auth-primary-foreground shadow-sm'
-                : 'text-auth-muted hover:bg-auth-canvas hover:text-auth-primary',
+                ? 'bg-gradient-to-r from-auth-primary to-auth-primary-hover text-auth-primary-foreground shadow-md shadow-auth-primary/15'
+                : 'text-auth-muted hover:bg-auth-canvas hover:text-auth-foreground',
             )}
           >
             <Icon className="size-4 shrink-0" aria-hidden="true" />

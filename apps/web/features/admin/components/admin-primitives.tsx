@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 export function AdminPageHeader({
   title,
@@ -32,20 +33,26 @@ export function AdminPageHeader({
 }) {
   const t = useTranslations('Admin');
   return (
-    <div className="mb-8 flex flex-col gap-4 border-b border-auth-border/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p className="mb-2 inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] text-auth-primary uppercase">
-          <ShieldCheck className="size-4" aria-hidden="true" />
+    <div className="relative isolate mb-6 flex flex-col gap-4 overflow-hidden rounded-3xl border border-auth-border/80 bg-gradient-to-br from-auth-surface via-auth-surface to-auth-primary/5 p-5 shadow-lg shadow-auth-foreground/[0.035] sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-16 -right-10 -z-10 size-48 rounded-full bg-auth-primary/10 blur-3xl"
+      />
+      <div className="relative min-w-0">
+        <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-auth-primary/15 bg-auth-primary/5 px-3 py-1.5 text-[0.68rem] font-bold tracking-[0.14em] text-auth-primary uppercase">
+          <ShieldCheck className="size-3.5" aria-hidden="true" />
           {t('adminConsole')}
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-auth-foreground sm:text-3xl">
+        <h1 className="text-2xl leading-tight font-semibold tracking-tight text-auth-foreground sm:text-3xl lg:text-[2rem]">
           {title}
         </h1>
         {description && (
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-auth-muted">{description}</p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-auth-muted sm:text-[0.95rem]">
+            {description}
+          </p>
         )}
       </div>
-      {children}
+      {children && <div className="relative shrink-0">{children}</div>}
     </div>
   );
 }
@@ -92,13 +99,19 @@ export function AdminLoading({ label }: { label: string }) {
 }
 
 export function AdminStatusBadge({ status, label }: { status: string; label?: string }) {
-  const variant =
-    status === 'APPROVED' || status === 'VERIFIED' || status === 'PUBLISHED'
-      ? 'default'
-      : status === 'REJECTED' || status === 'REMOVED' || status === 'DISMISSED'
-        ? 'destructive'
-        : 'secondary';
-  return <Badge variant={variant}>{label ?? formatAdminEnum(status)}</Badge>;
+  const appearance = ['APPROVED', 'VERIFIED', 'PUBLISHED', 'HIRED', 'ACTION_TAKEN'].includes(status)
+    ? 'border-emerald-600/15 bg-emerald-600/10 text-emerald-800 dark:text-emerald-200'
+    : ['REJECTED', 'REMOVED', 'DISMISSED', 'SUSPENDED'].includes(status)
+      ? 'border-rose-600/15 bg-rose-600/10 text-rose-800 dark:text-rose-200'
+      : ['PENDING', 'PENDING_REVIEW', 'UNDER_REVIEW', 'NEEDS_MORE_INFO'].includes(status)
+        ? 'border-amber-600/20 bg-amber-500/10 text-amber-800 dark:text-amber-200'
+        : 'border-auth-border bg-auth-canvas text-auth-muted';
+  return (
+    <Badge variant="outline" className={cn('h-6 gap-1.5 px-2.5 font-semibold', appearance)}>
+      <span className="size-1.5 rounded-full bg-current opacity-80" aria-hidden="true" />
+      {label ?? formatAdminEnum(status)}
+    </Badge>
+  );
 }
 
 export type AdminColumn<T> = {
@@ -135,7 +148,7 @@ export function AdminDataTable<T>({
           rows.map((row) => (
             <article
               key={getRowKey(row)}
-              className="rounded-xl border border-auth-border bg-auth-surface p-4 shadow-sm"
+              className="rounded-2xl border border-auth-border/80 bg-auth-surface p-4 shadow-sm shadow-auth-foreground/[0.03]"
             >
               <dl className="grid gap-3">
                 {columns.map((column) => (

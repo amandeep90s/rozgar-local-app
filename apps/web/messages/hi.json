@@ -36,7 +36,10 @@
       "verifiedEmployer": "सत्यापित नियोक्ता",
       "locationUnspecified": "स्थान नहीं दिया गया",
       "page": "पृष्ठ {page}, कुल {totalPages}",
-      "next": "अगला"
+      "next": "अगला",
+      "resultsCount": "{count} परिणाम",
+      "urgent": "तत्काल",
+      "viewDetails": "विवरण देखें"
     },
     "detail": {
       "backToJobs": "नौकरियों पर लौटें",
@@ -45,6 +48,8 @@
       "description": "विवरण",
       "responsibilities": "ज़िम्मेदारियाँ",
       "jobDetails": "नौकरी का विवरण",
+      "skills": "कौशल",
+      "urgent": "तत्काल",
       "employment": "रोज़गार",
       "workMode": "कार्य का तरीका",
       "experience": "अनुभव",

@@ -36,7 +36,10 @@
       "verifiedEmployer": "Verified employer",
       "locationUnspecified": "Location not specified",
       "page": "Page {page} of {totalPages}",
-      "next": "Next"
+      "next": "Next",
+      "resultsCount": "{count} results",
+      "urgent": "Urgent",
+      "viewDetails": "View details"
     },
     "detail": {
       "backToJobs": "Back to jobs",
@@ -45,6 +48,8 @@
       "description": "Description",
       "responsibilities": "Responsibilities",
       "jobDetails": "Job details",
+      "skills": "Skills",
+      "urgent": "Urgent",
       "employment": "Employment",
       "workMode": "Work mode",
       "experience": "Experience",

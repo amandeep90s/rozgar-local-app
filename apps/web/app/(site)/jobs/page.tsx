@@ -25,7 +25,18 @@ export default async function JobsPage({
     listPublicJobs(input),
     listPublicJobCategories(),
   ]);
-  return <PublicJobSearch initialResult={result} categories={categories.items} />;
+  const currentQuery = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    const normalized = single(value);
+    if (normalized) currentQuery.set(key, normalized);
+  }
+  return (
+    <PublicJobSearch
+      initialResult={result}
+      categories={categories.items}
+      currentQuery={currentQuery.toString()}
+    />
+  );
 }
 
 function single(value: string | string[] | undefined) {

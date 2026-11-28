@@ -36,7 +36,10 @@
       "verifiedEmployer": "ਤਸਦੀਕਸ਼ੁਦਾ ਰੁਜ਼ਗਾਰਦਾਤਾ",
       "locationUnspecified": "ਥਾਂ ਨਹੀਂ ਦਿੱਤੀ",
       "page": "ਪੰਨਾ {page}, ਕੁੱਲ {totalPages}",
-      "next": "ਅਗਲਾ"
+      "next": "ਅਗਲਾ",
+      "resultsCount": "{count} ਨਤੀਜੇ",
+      "urgent": "ਜ਼ਰੂਰੀ",
+      "viewDetails": "ਵੇਰਵੇ ਵੇਖੋ"
     },
     "detail": {
       "backToJobs": "ਨੌਕਰੀਆਂ ਵੱਲ ਵਾਪਸ",
@@ -45,6 +48,8 @@
       "description": "ਵੇਰਵਾ",
       "responsibilities": "ਜ਼ਿੰਮੇਵਾਰੀਆਂ",
       "jobDetails": "ਨੌਕਰੀ ਦੇ ਵੇਰਵੇ",
+      "skills": "ਹੁਨਰ",
+      "urgent": "ਜ਼ਰੂਰੀ",
       "employment": "ਰੁਜ਼ਗਾਰ",
       "workMode": "ਕੰਮ ਦਾ ਤਰੀਕਾ",
       "experience": "ਤਜਰਬਾ",
