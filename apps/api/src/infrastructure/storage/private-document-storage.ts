@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHmac, randomUUID } from 'node:crypto';
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -46,7 +46,7 @@ export class PrivateDocumentStorage {
       timestamp: String(timestamp),
       type: 'authenticated',
     };
-    const signature = createHash('sha1')
+    const signature = createHash('sha256')
       .update(
         Object.entries(signedParams)
           .sort(([a], [b]) => a.localeCompare(b))
@@ -142,7 +142,7 @@ export class PrivateDocumentStorage {
       expires_at: String(expiresAt),
       timestamp: String(timestamp),
     };
-    const signature = createHash('sha1')
+    const signature = createHash('sha256')
       .update(
         Object.entries(params)
           .sort(([a], [b]) => a.localeCompare(b))
@@ -178,13 +178,12 @@ export class PrivateDocumentStorage {
       invalidate: 'true',
       type: deliveryType,
     };
-    const signature = createHash('sha1')
-      .update(
-        Object.entries(params)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([key, value]) => `${key}=${value}`)
-          .join('&') + apiSecret,
-      )
+    const signaturePayload = Object.entries(params)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&');
+    const signature = createHmac('sha256', apiSecret)
+      .update(signaturePayload)
       .digest('hex');
     const form = new URLSearchParams({
       ...params,
