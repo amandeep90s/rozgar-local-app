@@ -29,7 +29,7 @@ export default async function Home() {
       <section className="relative isolate overflow-hidden bg-auth-canvas">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -top-32 -right-36 -z-10 size-[34rem] rounded-full bg-auth-primary/10 blur-3xl"
+          className="pointer-events-none absolute -top-32 -right-36 -z-10 size-136 rounded-full bg-auth-primary/10 blur-3xl"
         />
         <div className="container mx-auto grid gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-8 lg:py-28">
           <div className="max-w-2xl">

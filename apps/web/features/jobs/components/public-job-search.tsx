@@ -87,7 +87,7 @@ export async function PublicJobSearch({
               <span className="text-xs font-semibold text-auth-muted">{t('employmentType')}</span>
               <NativeSelect
                 name="employmentType"
-                className="w-full [&_[data-slot=native-select]]:h-11 [&_[data-slot=native-select]]:rounded-xl [&_[data-slot=native-select]]:border-auth-border [&_[data-slot=native-select]]:bg-auth-canvas/50"
+                className="w-full **:data-[slot=native-select]:h-11 **:data-[slot=native-select]:rounded-xl **:data-[slot=native-select]:border-auth-border **:data-[slot=native-select]:bg-auth-canvas/50"
                 defaultValue={searchValues.get('employmentType') ?? ''}
               >
                 <NativeSelectOption value="">{t('anyEmploymentType')}</NativeSelectOption>
@@ -113,7 +113,7 @@ export async function PublicJobSearch({
               <span className="text-xs font-semibold text-auth-muted">{t('category')}</span>
               <NativeSelect
                 name="categoryId"
-                className="w-full [&_[data-slot=native-select]]:h-11 [&_[data-slot=native-select]]:rounded-xl [&_[data-slot=native-select]]:border-auth-border [&_[data-slot=native-select]]:bg-auth-canvas/50"
+                className="w-full **:data-[slot=native-select]:h-11 **:data-[slot=native-select]:rounded-xl **:data-[slot=native-select]:border-auth-border **:data-[slot=native-select]:bg-auth-canvas/50"
                 defaultValue={searchValues.get('categoryId') ?? ''}
               >
                 <NativeSelectOption value="">{t('allCategories')}</NativeSelectOption>
@@ -150,7 +150,7 @@ export async function PublicJobSearch({
               <span className="text-xs font-semibold text-auth-muted">{t('sort')}</span>
               <NativeSelect
                 name="sort"
-                className="w-full [&_[data-slot=native-select]]:h-11 [&_[data-slot=native-select]]:rounded-xl [&_[data-slot=native-select]]:border-auth-border [&_[data-slot=native-select]]:bg-auth-canvas/50"
+                className="w-full **:data-[slot=native-select]:h-11 **:data-[slot=native-select]:rounded-xl **:data-[slot=native-select]:border-auth-border **:data-[slot=native-select]:bg-auth-canvas/50"
                 defaultValue={searchValues.get('sort') ?? 'NEWEST'}
               >
                 {(['NEWEST', 'OLDEST', 'SALARY_LOW', 'SALARY_HIGH'] as const).map((value) => (
@@ -215,10 +215,10 @@ export async function PublicJobSearch({
                 <li key={job.id}>
                   <Link
                     href={`/jobs/${job.id}`}
-                    className="group flex h-full flex-col rounded-3xl border border-auth-border/80 bg-auth-surface p-5 shadow-sm shadow-auth-foreground/[0.025] transition duration-200 hover:-translate-y-0.5 hover:border-auth-primary/30 hover:shadow-xl hover:shadow-auth-primary/[0.07] sm:p-6"
+                    className="group flex h-full flex-col rounded-3xl border border-auth-border/80 bg-auth-surface p-5 shadow-sm shadow-auth-foreground/2.5 transition duration-200 hover:-translate-y-0.5 hover:border-auth-primary/30 hover:shadow-xl hover:shadow-auth-primary/[0.07] sm:p-6"
                   >
                     <div className="flex items-start gap-4">
-                      <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-auth-primary/12 to-auth-primary/5 text-auth-primary ring-1 ring-auth-primary/10">
+                      <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-auth-primary/12 to-auth-primary/5 text-auth-primary ring-1 ring-auth-primary/10">
                         <Building2 className="size-5" aria-hidden="true" />
                       </span>
                       <div className="min-w-0 flex-1">
