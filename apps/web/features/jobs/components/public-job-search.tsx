@@ -10,9 +10,11 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { getTranslations } from 'next-intl/server';
+import { JobSearchLocationFields } from './job-search-location-fields';
 
 type Category = { id: string; name: string; slug: string };
 
@@ -20,13 +22,18 @@ export async function PublicJobSearch({
   initialResult,
   categories,
   currentQuery = '',
+  initialStateName = '',
+  initialCityName = '',
 }: {
   initialResult: PublicJobListResponse;
   categories: Category[];
   currentQuery?: string;
+  initialStateName?: string;
+  initialCityName?: string;
 }) {
   const t = await getTranslations('PublicJobs.search');
   const detailT = await getTranslations('PublicJobs.detail');
+  const searchValues = new URLSearchParams(currentQuery);
   const nextParams = new URLSearchParams(currentQuery);
   nextParams.set('page', String(initialResult.pageInfo.page + 1));
 
@@ -58,40 +65,30 @@ export async function PublicJobSearch({
           <div className="grid gap-4 md:grid-cols-6 lg:grid-cols-12">
             <label className="grid gap-1.5 md:col-span-3 lg:col-span-5">
               <span className="text-xs font-semibold text-auth-muted">{t('keyword')}</span>
-              <span className="relative">
-                <Search
-                  className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-auth-muted"
-                  aria-hidden="true"
-                />
-                <Input
+              <InputGroup className="h-11 rounded-xl border-auth-border bg-auth-canvas/50">
+                <InputGroupInput
                   name="keyword"
                   placeholder={t('keywordPlaceholder')}
-                  className="h-11 rounded-xl border-auth-border bg-auth-canvas/50 pl-10"
+                  defaultValue={searchValues.get('keyword') ?? ''}
+                  className="h-11 text-auth-foreground placeholder:text-auth-muted"
                 />
-              </span>
+                <InputGroupAddon className="text-auth-muted">
+                  <Search className="size-4" aria-hidden="true" />
+                </InputGroupAddon>
+              </InputGroup>
             </label>
-            <label className="grid gap-1.5 md:col-span-3 lg:col-span-2">
-              <span className="text-xs font-semibold text-auth-muted">{t('city')}</span>
-              <Input
-                name="cityName"
-                placeholder={t('city')}
-                className="h-11 rounded-xl border-auth-border bg-auth-canvas/50"
+            <div className="grid gap-4 sm:grid-cols-2 md:col-span-6 lg:col-span-4">
+              <JobSearchLocationFields
+                initialStateName={initialStateName}
+                initialCityName={initialCityName}
               />
-            </label>
-            <label className="grid gap-1.5 md:col-span-3 lg:col-span-2">
-              <span className="text-xs font-semibold text-auth-muted">{t('state')}</span>
-              <Input
-                name="stateName"
-                placeholder={t('state')}
-                className="h-11 rounded-xl border-auth-border bg-auth-canvas/50"
-              />
-            </label>
+            </div>
             <label className="grid gap-1.5 md:col-span-3 lg:col-span-3">
               <span className="text-xs font-semibold text-auth-muted">{t('employmentType')}</span>
               <NativeSelect
                 name="employmentType"
                 className="w-full [&_[data-slot=native-select]]:h-11 [&_[data-slot=native-select]]:rounded-xl [&_[data-slot=native-select]]:border-auth-border [&_[data-slot=native-select]]:bg-auth-canvas/50"
-                defaultValue=""
+                defaultValue={searchValues.get('employmentType') ?? ''}
               >
                 <NativeSelectOption value="">{t('anyEmploymentType')}</NativeSelectOption>
                 {(
@@ -117,6 +114,7 @@ export async function PublicJobSearch({
               <NativeSelect
                 name="categoryId"
                 className="w-full [&_[data-slot=native-select]]:h-11 [&_[data-slot=native-select]]:rounded-xl [&_[data-slot=native-select]]:border-auth-border [&_[data-slot=native-select]]:bg-auth-canvas/50"
+                defaultValue={searchValues.get('categoryId') ?? ''}
               >
                 <NativeSelectOption value="">{t('allCategories')}</NativeSelectOption>
                 {categories.map((category) => (
@@ -133,6 +131,7 @@ export async function PublicJobSearch({
                 type="number"
                 min="0"
                 placeholder={t('minimumSalary')}
+                defaultValue={searchValues.get('salaryMin') ?? ''}
                 className="h-11 rounded-xl border-auth-border bg-auth-canvas/50"
               />
             </label>
@@ -143,6 +142,7 @@ export async function PublicJobSearch({
                 type="number"
                 min="0"
                 placeholder={t('maximumSalary')}
+                defaultValue={searchValues.get('salaryMax') ?? ''}
                 className="h-11 rounded-xl border-auth-border bg-auth-canvas/50"
               />
             </label>
@@ -151,7 +151,7 @@ export async function PublicJobSearch({
               <NativeSelect
                 name="sort"
                 className="w-full [&_[data-slot=native-select]]:h-11 [&_[data-slot=native-select]]:rounded-xl [&_[data-slot=native-select]]:border-auth-border [&_[data-slot=native-select]]:bg-auth-canvas/50"
-                defaultValue="NEWEST"
+                defaultValue={searchValues.get('sort') ?? 'NEWEST'}
               >
                 {(['NEWEST', 'OLDEST', 'SALARY_LOW', 'SALARY_HIGH'] as const).map((value) => (
                   <NativeSelectOption key={value} value={value}>

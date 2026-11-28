@@ -35,6 +35,8 @@ export default async function JobsPage({
       initialResult={result}
       categories={categories.items}
       currentQuery={currentQuery.toString()}
+      initialStateName={input.stateName ?? ''}
+      initialCityName={input.cityName ?? ''}
     />
   );
 }

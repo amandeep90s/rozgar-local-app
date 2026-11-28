@@ -35,7 +35,7 @@ export async function PortalShell({ children, role }: { children: ReactNode; rol
     <Toaster>
       <SidebarProvider
         defaultOpen={defaultSidebarOpen}
-        className="admin-theme min-h-dvh bg-auth-canvas text-auth-foreground [--input:var(--auth-input)] [--ring:var(--auth-primary)] **:data-[slot=input]:h-12 **:data-[slot=input]:rounded-lg **:data-[slot=input]:px-4 **:data-[slot=input-group]:h-12 **:data-[slot=input-group]:rounded-lg **:data-[slot=input-group-control]:h-full **:data-[slot=input-group-control]:px-4 **:data-[slot=native-select]:h-12 **:data-[slot=native-select]:rounded-lg **:data-[slot=native-select]:px-4 **:data-[slot=select-trigger]:h-12 **:data-[slot=select-trigger]:rounded-lg **:data-[slot=select-trigger]:px-4 **:data-[slot=textarea]:min-h-32 **:data-[slot=textarea]:rounded-lg **:data-[slot=textarea]:px-4 **:data-[slot=textarea]:py-3"
+        className="admin-theme min-h-dvh bg-auth-canvas text-auth-foreground"
       >
         <Sidebar collapsible="icon" className="border-auth-border">
           <SidebarHeader className="min-h-16 flex-row items-center border-b border-auth-border/80 p-2">
